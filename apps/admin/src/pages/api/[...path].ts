@@ -3,7 +3,8 @@ import type { APIRoute } from 'astro';
 const API_ORIGIN = 'https://api.sparaton.com';
 
 export const ALL: APIRoute = async ({ request, params }) => {
-  if (request.headers.get('x-requested-with') !== 'sparaton-admin') {
+  const isWebSocket = request.headers.get('upgrade')?.toLowerCase() === 'websocket';
+  if (!isWebSocket && request.headers.get('x-requested-with') !== 'sparaton-admin') {
     return new Response('Forbidden', { status: 403 });
   }
 
