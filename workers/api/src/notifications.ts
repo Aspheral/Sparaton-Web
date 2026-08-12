@@ -8,7 +8,7 @@ export async function notifyAssignedStaff(env:Env,input:{ ticketId:string; publi
   const assignments=await env.DB.prepare('SELECT staff_email FROM ticket_assignments WHERE ticket_id=?1 AND active=1 ORDER BY created_at DESC').bind(input.ticketId).all<{staff_email:string}>();
   for(const assignment of assignments.results){
     if(input.staffOnline){await record(env,input.ticketId,input.messageId,'staff',assignment.staff_email,'skipped_online');continue;}
-    if(!env.RESEND_API_KEY){await record(env,input.ticketId,input.messageId,'staff',assignment.staff_email,'skipped_unconfigured');continue;}
+    if(env.EMAIL_DELIVERY_MODE==='disabled'||!env.RESEND_API_KEY){await record(env,input.ticketId,input.messageId,'staff',assignment.staff_email,'skipped_unconfigured');continue;}
     const provider=new ResendEmailProvider(env.RESEND_API_KEY);
     try{
       const sent=await provider.send({...staffTicketNotificationEmail({from:env.EMAIL_FROM_TICKETS,to:assignment.staff_email,subject:input.subject,preview:input.preview,requesterName:input.requesterName,adminUrl:`${env.ADMIN_ORIGIN}/tickets/${encodeURIComponent(input.publicId)}`}),idempotencyKey:`staff-${input.messageId}-${assignment.staff_email}`});
@@ -19,7 +19,7 @@ export async function notifyAssignedStaff(env:Env,input:{ ticketId:string; publi
 
 export async function notifyClient(env:Env,input:{ ticketId:string; publicId:string; messageId:string; subject:string; preview:string; email:string; clientOnline:boolean }):Promise<void>{
   if(input.clientOnline){await record(env,input.ticketId,input.messageId,'client',input.email,'skipped_online');return;}
-  if(!env.RESEND_API_KEY){await record(env,input.ticketId,input.messageId,'client',input.email,'skipped_unconfigured');return;}
+  if(env.EMAIL_DELIVERY_MODE==='disabled'||!env.RESEND_API_KEY){await record(env,input.ticketId,input.messageId,'client',input.email,'skipped_unconfigured');return;}
   const provider=new ResendEmailProvider(env.RESEND_API_KEY);
   try{
     const sent=await provider.send({...ticketReplyEmail({from:env.EMAIL_FROM_TICKETS,to:input.email,subject:input.subject,preview:input.preview,ticketUrl:`${env.STUDIOS_ORIGIN}/tickets/${encodeURIComponent(input.publicId)}`}),idempotencyKey:`client-${input.messageId}`});
