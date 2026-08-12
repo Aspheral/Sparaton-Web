@@ -3,5 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "exports": { "./styles.css": "./src/styles.css", "./brand.svg": "./src/brand.svg" }
+  "exports": {
+    "./styles.css": "./src/styles.css",
+    "./brand.svg": "./src/brand.svg",
+    "./security": "./src/security.ts"
+  }
 }

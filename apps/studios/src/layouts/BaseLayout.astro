@@ -10,6 +10,7 @@ const {
   robots = 'index,follow',
   schemas = []
 } = Astro.props;
+const nonce=(Astro.locals as {cspNonce?:string}).cspNonce;
 const canonicalUrl = new URL(canonical, 'https://sparaton.com');
 const imageUrl = new URL(ogImage, 'https://sparaton.com');
 const organizationSchema={ '@context':'https://schema.org', '@type':'Organization', name:'Sparaton Studios', url:'https://sparaton.com', founder:[{ '@type':'Person', name:'Rocko Sparacino' },{ '@type':'Person', name:'Koah Seaton' }] };
@@ -37,7 +38,7 @@ const jsonLd=JSON.stringify([organizationSchema,...schemas]);
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={imageUrl} />
     <title>{title}</title>
-    <script is:inline>
+    <script is:inline nonce={nonce}>
       (() => {
         try {
           const saved = localStorage.getItem('sparaton-theme');
@@ -46,7 +47,7 @@ const jsonLd=JSON.stringify([organizationSchema,...schemas]);
         } catch {}
       })();
     </script>
-    <script is:inline type="application/ld+json" set:html={jsonLd}></script>
+    <script is:inline nonce={nonce} type="application/ld+json" set:html={jsonLd}></script>
   </head>
   <body>
     <a class="skip-link" href="#content">Skip to content</a>
@@ -66,7 +67,7 @@ const jsonLd=JSON.stringify([organizationSchema,...schemas]);
         <div><strong>Trust</strong><ul><li><a href="/privacy">Privacy</a></li><li><a href="/terms">Terms</a></li><li><a href="/accessibility">Accessibility</a></li><li><a href="/responsible-disclosure">Responsible Disclosure</a></li></ul></div>
       </div>
     </footer>
-    <script is:inline>
+    <script is:inline nonce={nonce}>
       document.getElementById('theme-toggle')?.addEventListener('click', () => {
         const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
         document.documentElement.dataset.theme = next;

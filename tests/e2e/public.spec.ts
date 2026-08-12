@@ -27,6 +27,14 @@ test('service passes context into inquiry', async ({ page }) => {
   await expect(page.locator('input[name=service]')).not.toHaveValue('');
 });
 
+test('local HTTP security policy does not force a nonexistent TLS origin', async ({ request }) => {
+  const response = await request.get('/');
+  const headers = response.headers();
+  expect(headers['content-security-policy']).toContain("script-src 'self' 'nonce-");
+  expect(headers['content-security-policy']).not.toContain('upgrade-insecure-requests');
+  expect(headers['strict-transport-security']).toBeUndefined();
+});
+
 test('robots protects ticket paths', async ({ request }) => {
   const response = await request.get('/robots.txt');
   expect(await response.text()).toContain('Disallow: /tickets/');

@@ -1,3 +1,15 @@
 import { defineMiddleware } from 'astro:middleware';
-const csp=["default-src 'self'","base-uri 'self'","object-src 'none'","frame-ancestors 'none'","form-action 'self' https://api.sparaton.com","script-src 'self' 'unsafe-inline'","style-src 'self' 'unsafe-inline'","img-src 'self' data: https:","font-src 'self' data:","connect-src 'self' https://api.sparaton.com wss://api.sparaton.com","upgrade-insecure-requests"].join('; ');
-export const onRequest=defineMiddleware(async(_context,next)=>{const response=await next();response.headers.set('Content-Security-Policy',csp);response.headers.set('Strict-Transport-Security','max-age=31536000; includeSubDomains');response.headers.set('X-Content-Type-Options','nosniff');response.headers.set('Referrer-Policy','strict-origin-when-cross-origin');response.headers.set('Permissions-Policy','camera=(), microphone=(), geolocation=(), payment=(), usb=()');response.headers.set('X-Frame-Options','DENY');return response;});
+import { applySecurityHeaders, buildSecurityHeaders, createCspNonce } from '@sparaton/ui/security';
+
+export const onRequest = defineMiddleware(async (context, next) => {
+  const nonce = createCspNonce();
+  (context.locals as { cspNonce?: string }).cspNonce = nonce;
+  const response = await next();
+  return applySecurityHeaders(response, buildSecurityHeaders({
+    url: context.url,
+    production: import.meta.env.PROD,
+    nonce,
+    formAction: ['https://api.sparaton.com'],
+    connectSrc: ['https://api.sparaton.com', 'wss://api.sparaton.com']
+  }));
+});
