@@ -48,10 +48,10 @@ export async function adminPrivacyCloseSessions(request:Request,env:Env):Promise
 export async function adminPrivacyCleanup(request:Request,env:Env):Promise<Response>{
   const admin=await requireAdmin(request,env,PRIVACY_ROLES);
   const verification=await env.DB.prepare('DELETE FROM email_verifications WHERE expires_at < CURRENT_TIMESTAMP').run();
-  const sessions=await env.DB.prepare('DELETE FROM ticket_access_sessions WHERE expires_at < CURRENT_TIMESTAMP AND (revoked_at IS NOT NULL OR expires_at < datetime(CURRENT_TIMESTAMP,\'-7 days\'))').run();
+  const sessions=await env.DB.prepare('DELETE FROM ticket_access_sessions WHERE expires_at < CURRENT_TIMESTAMP').run();
   await recordOperation(env,admin.email,'system','cleanup','completed',{expiredVerificationRecords:verification.meta.changes,expiredSessions:sessions.meta.changes});
   await audit(env,request,admin.email,'privacy.expired_records.cleaned','expired-records',{expiredVerificationRecords:verification.meta.changes,expiredSessions:sessions.meta.changes});
-  return json({expiredVerificationRecords:verification.meta.changes,expiredSessions:sessions.meta.changes,note:'Attachment and audit retention are not automatically applied until owner/legal retention settings are confirmed.'});
+  return json({expiredVerificationRecords:verification.meta.changes,expiredSessions:sessions.meta.changes,note:'Only already-expired verification and access-session records were removed. Attachment and audit retention are not automatically applied until owner/legal retention settings are confirmed.'});
 }
 
 export async function adminPrivacyAnonymize(request:Request,env:Env):Promise<Response>{
