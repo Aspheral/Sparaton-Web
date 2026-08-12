@@ -13,15 +13,21 @@ export const ALL: APIRoute = async ({ request, params }) => {
   const target = new URL(`/v1/admin/${params.path ?? ''}`, API_ORIGIN);
   target.search = new URL(request.url).search;
 
-  const headers = new Headers({ 'cf-access-jwt-assertion': assertion });
-  const contentType = request.headers.get('content-type');
-  if (contentType) headers.set('content-type', contentType);
+  const headers = new Headers({
+    'cf-access-jwt-assertion': assertion,
+    'x-requested-with': 'sparaton-admin'
+  });
+  for (const name of ['content-type','upgrade','connection','sec-websocket-key','sec-websocket-version','sec-websocket-protocol','sec-websocket-extensions']) {
+    const value = request.headers.get(name);
+    if (value) headers.set(name, value);
+  }
 
   const method = request.method.toUpperCase();
   const init: RequestInit = { method, headers, redirect: 'manual' };
   if (method !== 'GET' && method !== 'HEAD') init.body = await request.arrayBuffer();
 
   const response = await fetch(target, init);
+  if (response.status === 101) return response;
   const outHeaders = new Headers(response.headers);
   outHeaders.set('cache-control', 'no-store');
   outHeaders.delete('set-cookie');
