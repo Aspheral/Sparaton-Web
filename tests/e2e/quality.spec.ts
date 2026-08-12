@@ -6,6 +6,22 @@ const sites=[
   ['ILMP','http://127.0.0.1:4323/'],
   ['Admin','http://127.0.0.1:4324/']
 ] as const;
+const responsiveRoutes=[
+  'http://127.0.0.1:4321/',
+  'http://127.0.0.1:4321/services',
+  'http://127.0.0.1:4321/contact',
+  'http://127.0.0.1:4321/projects',
+  'http://127.0.0.1:4322/',
+  'http://127.0.0.1:4323/',
+  'http://127.0.0.1:4324/',
+  'http://127.0.0.1:4324/content',
+  'http://127.0.0.1:4324/operations'
+] as const;
+const viewports=[
+  {name:'compact phone',width:320,height:740},
+  {name:'tablet',width:768,height:900},
+  {name:'desktop',width:1280,height:900}
+] as const;
 
 test('representative sites keep semantic entry points and no horizontal overflow',async({page})=>{
   for(const[name,url]of sites){
@@ -16,6 +32,18 @@ test('representative sites keep semantic entry points and no horizontal overflow
     await expect(page.locator('#content'),`${name} skip target must exist`).toHaveCount(1);
     const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
     expect(overflow,`${name} horizontally overflows`).toBeLessThanOrEqual(1);
+  }
+});
+
+test('representative public and Admin routes remain contained at phone, tablet, and desktop widths',async({page})=>{
+  for(const viewport of viewports){
+    await page.setViewportSize({width:viewport.width,height:viewport.height});
+    for(const url of responsiveRoutes){
+      await page.goto(url);
+      const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
+      expect(overflow,`${url} overflows at ${viewport.name} (${viewport.width}px)`).toBeLessThanOrEqual(1);
+      await expect(page.locator('#content'),`${url} lost its main content at ${viewport.name}`).toBeVisible();
+    }
   }
 });
 
