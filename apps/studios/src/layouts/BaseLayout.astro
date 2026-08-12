@@ -1,0 +1,45 @@
+---
+import '@sparaton/ui/styles.css';
+import brand from '@sparaton/ui/brand.svg?raw';
+const { title = 'Sparaton Studios', description = 'Creative work built around the people who make it.', canonical = Astro.url.pathname } = Astro.props;
+const canonicalUrl = new URL(canonical, 'https://sparaton.com');
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#f4f0e7" />
+    <link rel="canonical" href={canonicalUrl} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:site_name" content="Sparaton Studios" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <title>{title}</title>
+    <script is:inline>{`(() => { try { const s=localStorage.getItem('sparaton-theme'); const d=matchMedia('(prefers-color-scheme: dark)').matches; document.documentElement.dataset.theme=(s==='light'||s==='dark')?s:(d?'dark':'light'); } catch {} })();`}</script>
+    <script type="application/ld+json" set:html={JSON.stringify({ '@context':'https://schema.org', '@type':'Organization', name:'Sparaton Studios', url:'https://sparaton.com', founder:[{ '@type':'Person', name:'Rocko Sparacino' },{ '@type':'Person', name:'Koah Seaton' }] })}></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Skip to content</a>
+    <header class="shell site-header">
+      <a class="brand" href="/" aria-label="Sparaton Studios home"><span set:html={brand}></span><span>SPARATON</span></a>
+      <nav class="nav" aria-label="Primary">
+        <a href="/services">Services</a><a href="/#people">People</a><a href="/#work">Work</a><a class="always" href="/contact">Contact</a>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle color theme">◐</button>
+      </nav>
+    </header>
+    <main id="content"><slot /></main>
+    <footer>
+      <div class="shell footer-grid">
+        <div><a class="brand" href="/"><span set:html={brand}></span><span>SPARATON</span></a><p class="muted">Creative and technical work, organized around the people who actually make it.</p></div>
+        <div><strong>Studios</strong><ul><li><a href="https://aspheral.sparaton.com">Aspheral Softworks</a></li><li><a href="https://ilmp.sparaton.com">ILMP / Lattice Forge</a></li></ul></div>
+        <div><strong>Resources</strong><ul><li><a href="/services">Services</a></li><li><a href="/contact">Contact</a></li><li><a href="/privacy">Privacy</a></li></ul></div>
+        <div><strong>Elsewhere</strong><ul><li><a href="https://github.com/Aspheral">GitHub</a></li><li><a href="https://discord.com/users/886356555774193674">Aspheral on Discord</a></li></ul></div>
+      </div>
+    </footer>
+    <script is:inline>{`document.getElementById('theme-toggle')?.addEventListener('click',()=>{const n=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=n;localStorage.setItem('sparaton-theme',n);});`}</script>
+  </body>
+</html>

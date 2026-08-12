@@ -1,0 +1,24 @@
+{
+  "name": "sparaton-web",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "npm@10.9.2",
+  "workspaces": ["apps/*", "packages/*", "workers/*"],
+  "scripts": {
+    "dev:studios": "npm --workspace @sparaton/studios run dev",
+    "dev:aspheral": "npm --workspace @sparaton/aspheral run dev",
+    "dev:ilmp": "npm --workspace @sparaton/ilmp run dev",
+    "dev:admin": "npm --workspace @sparaton/admin run dev",
+    "dev:api": "npm --workspace @sparaton/api run dev",
+    "build": "npm run build -ws --if-present",
+    "check": "npm run check -ws --if-present",
+    "test": "npm run test -ws --if-present",
+    "test:e2e": "playwright test",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "typescript": "^5.9.2",
+    "vitest": "^4.1.10"
+  }
+}

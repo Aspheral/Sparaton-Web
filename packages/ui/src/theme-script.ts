@@ -1,0 +1,1 @@
+export const themeScript = `(() => { try { const stored = localStorage.getItem('sparaton-theme'); const systemDark = matchMedia('(prefers-color-scheme: dark)').matches; const theme = stored === 'dark' || stored === 'light' ? stored : (systemDark ? 'dark' : 'light'); document.documentElement.dataset.theme = theme; } catch {} })();`;

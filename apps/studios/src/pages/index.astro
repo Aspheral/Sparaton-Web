@@ -1,0 +1,20 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { organizations, services } from '@sparaton/content';
+---
+<BaseLayout title="Sparaton Studios | Creative work built around the people who make it">
+  <section class="shell hero">
+    <div><p class="eyebrow">Sparaton Studios</p><h1>Work gets better when the right people are close to it.</h1></div>
+    <div><p class="lede">Sparaton brings creative specialists, technical builders, and unusual projects into one working ecosystem, without the layers of a traditional agency.</p><a class="button" href="/contact">Start a conversation →</a></div>
+  </section>
+
+  <section class="section" id="work"><div class="shell"><div class="section-head"><p class="eyebrow">What we do</p><h2>Creative production without the agency fog.</h2></div><div class="grid-3">
+    {services.slice(0,6).map(([name, description]) => <article class="card"><h3>{name}</h3><p>{description}</p><a href="/services">Explore services →</a></article>)}
+  </div></div></section>
+
+  <section class="dark-band" id="people"><div class="shell"><div class="section-head"><p class="eyebrow">The ecosystem</p><h2>One organization. Distinct practices.</h2></div><div class="grid-3">
+    {organizations.map((org) => <article class="card" style="background:var(--night);color:var(--night-ink)"><div><span class="pill">{org.relationship}</span><h3 style="margin-top:1.4rem">{org.name}</h3></div><p class="muted">{org.summary}</p></article>)}
+  </div></div></section>
+
+  <section class="section"><div class="shell"><div class="section-head"><p class="eyebrow">How Sparaton works</p><h2>Direct collaboration, matched to the work.</h2></div><div class="grid-3"><article class="card"><h3>Find the right discipline</h3><p>Start with the work itself: story, art, technical production, or a project that crosses several fields.</p></article><article class="card"><h3>Work close to the creator</h3><p>Specialized talent without traditional agency overhead means fewer layers between the brief and the person doing the work.</p></article><article class="card"><h3>Keep the scope flexible</h3><p>Projects can begin as a focused commission and grow into a broader collaboration when that makes sense.</p></article></div></div></section>
+</BaseLayout>

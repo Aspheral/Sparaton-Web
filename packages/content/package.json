@@ -1,0 +1,8 @@
+{
+  "name": "@sparaton/content",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": { "@sparaton/types": "0.1.0" },
+  "exports": { ".": "./src/index.ts" }
+}

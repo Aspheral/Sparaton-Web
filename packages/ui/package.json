@@ -1,0 +1,7 @@
+{
+  "name": "@sparaton/ui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { "./styles.css": "./src/styles.css", "./brand.svg": "./src/brand.svg" }
+}

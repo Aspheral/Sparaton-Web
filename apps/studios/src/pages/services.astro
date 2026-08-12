@@ -1,0 +1,8 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { services } from '@sparaton/content';
+---
+<BaseLayout title="Services | Sparaton Studios" description="Creative services and specialist commissioned work from Sparaton Studios.">
+  <section class="shell hero"><div><p class="eyebrow">Services</p><h1>Specialist work, scoped around what you actually need.</h1></div><p class="lede">Sparaton supports focused commissions and collaborative production across narrative, visual, and technical work. Pricing is quoted per scope rather than invented as a one-size-fits-all package.</p></section>
+  <section class="section"><div class="shell grid-3">{services.map(([name, description]) => <article class="card"><div><h3>{name}</h3><p>{description}</p></div><a class="button secondary" href={`/contact?service=${encodeURIComponent(name)}`}>Request a quote →</a></article>)}</div></section>
+</BaseLayout>
