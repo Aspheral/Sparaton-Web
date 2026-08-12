@@ -9,7 +9,6 @@ const brands={
   aspheral:{dir:'apps/aspheral/public',bg:'#151716',fg:'#f1eee6',accent:'#6f8b79',draw(draw){draw.roundRect(0,0,64,64,12,this.bg);draw.polygon([[14,46],[30,16],[38,16],[50,46],[41,46],[38,38],[25,38],[21,46]],this.fg);draw.polygon([[28,30],[36,30],[32,19]],this.bg);draw.circle(48,17,5,this.accent);}},
   ilmp:{dir:'apps/ilmp/public',bg:'#171615',fg:'#f1eee6',accent:'#9a795f',draw(draw){draw.roundRect(0,0,64,64,12,this.bg);draw.strokeRect(14,14,36,36,5,this.fg);draw.line(14,26,50,26,3,this.accent);draw.line(26,14,26,50,3,this.accent);draw.strokeRect(29,29,21,21,3,this.accent);}}
 };
-for(const [name,brand] of Object.entries(brands)){for(const size of sizes){const scale=Math.max(4,Math.ceil(256/size)),canvas=new Canvas(size*scale,size*scale,scale*size/64);brand.draw(canvas);const png=canvas.toPng(size,size,scale);const file=size===180?'apple-touch-icon.png':size===16?'favicon-16.png':size===32?'favicon-32.png':`icon-${size}.png`;const path=join(brand.dir,file);mkdirSync(dirname(path),{recursive:true});writeFileSync(path,png);console.log(`generated ${name} ${size}x${size}: ${path}`)}}
 
 class Canvas{
   constructor(width,height,unit){this.width=width;this.height=height;this.unit=unit;this.data=new Uint8Array(width*height*4)}
@@ -27,3 +26,16 @@ class Canvas{
 function ihdr(w,h){const b=Buffer.alloc(13);b.writeUInt32BE(w,0);b.writeUInt32BE(h,4);b[8]=8;b[9]=6;return b}
 function chunk(type,data){const t=Buffer.from(type),len=Buffer.alloc(4),crc=Buffer.alloc(4);len.writeUInt32BE(data.length);crc.writeUInt32BE(crc32(Buffer.concat([t,data]))>>>0);return Buffer.concat([len,t,data,crc])}
 function crc32(buf){let c=0xffffffff;for(const byte of buf){c^=byte;for(let k=0;k<8;k++)c=(c>>>1)^((c&1)?0xedb88320:0)}return(c^0xffffffff)>>>0}
+
+for(const [name,brand] of Object.entries(brands)){
+  for(const size of sizes){
+    const scale=Math.max(4,Math.ceil(256/size)),canvas=new Canvas(size*scale,size*scale,scale*size/64);
+    brand.draw(canvas);
+    const png=canvas.toPng(size,size,scale);
+    const file=size===180?'apple-touch-icon.png':size===16?'favicon-16.png':size===32?'favicon-32.png':`icon-${size}.png`;
+    const path=join(brand.dir,file);
+    mkdirSync(dirname(path),{recursive:true});
+    writeFileSync(path,png);
+    console.log(`generated ${name} ${size}x${size}: ${path}`);
+  }
+}
