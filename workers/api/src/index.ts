@@ -3,7 +3,7 @@ import { HttpError } from './access';
 import { adminAssign, adminInternalNote, adminOverview, adminReply, adminTag, adminTicketDetail, adminTicketSocket, adminTickets, adminUpdateTicket } from './admin';
 import { adminCollection, deleteContent, publicContentDetail, publicDirectory, publicPosts, publicProjects, upsertMetric, upsertOrganization, upsertPerson, upsertPost, upsertProject, upsertService, upsertSetting } from './content';
 import { connectTicketSocket, createTicket, getTicket, postClientMessage, verifyTicket } from './tickets';
-import { getAdminAttachment, getClientAttachment, uploadAdminAttachment, uploadClientAttachment } from './attachments';
+import { getAdminAttachment, getClientAttachment, listAdminAttachments, listClientAttachments, uploadAdminAttachment, uploadClientAttachment } from './attachments';
 import { adminAnalytics } from './analytics';
 import { adminSyncGithub } from './github-sync';
 export { TicketRoom } from './ticket-room';
@@ -32,6 +32,7 @@ export default {
       else if(method==='GET'&&/^\/v1\/tickets\/[^/]+$/.test(p))response=await getTicket(request,env,p.split('/')[3]!);
       else if(method==='POST'&&/^\/v1\/tickets\/[^/]+\/messages$/.test(p))response=await postClientMessage(request,env,p.split('/')[3]!);
       else if(method==='GET'&&/^\/v1\/tickets\/[^/]+\/socket$/.test(p))response=await connectTicketSocket(request,env,p.split('/')[3]!);
+      else if(method==='GET'&&/^\/v1\/tickets\/[^/]+\/attachments$/.test(p))response=await listClientAttachments(request,env,p.split('/')[3]!);
       else if(method==='POST'&&/^\/v1\/tickets\/[^/]+\/attachments$/.test(p))response=await uploadClientAttachment(request,env,p.split('/')[3]!);
       else if(method==='GET'&&/^\/v1\/tickets\/[^/]+\/attachments\/[^/]+$/.test(p))response=await getClientAttachment(request,env,p.split('/')[3]!,p.split('/')[5]!);
       else if(method==='GET'&&p==='/v1/admin/overview')response=await adminOverview(request,env);
@@ -43,6 +44,7 @@ export default {
       else if(method==='POST'&&/^\/v1\/admin\/tickets\/[^/]+\/assign$/.test(p))response=await adminAssign(request,env,p.split('/')[4]!);
       else if(method==='PATCH'&&/^\/v1\/admin\/tickets\/[^/]+$/.test(p))response=await adminUpdateTicket(request,env,p.split('/')[4]!);
       else if(method==='POST'&&/^\/v1\/admin\/tickets\/[^/]+\/tags$/.test(p))response=await adminTag(request,env,p.split('/')[4]!);
+      else if(method==='GET'&&/^\/v1\/admin\/tickets\/[^/]+\/attachments$/.test(p))response=await listAdminAttachments(request,env,p.split('/')[4]!);
       else if(method==='POST'&&/^\/v1\/admin\/tickets\/[^/]+\/attachments$/.test(p))response=await uploadAdminAttachment(request,env,p.split('/')[4]!);
       else if(method==='GET'&&/^\/v1\/admin\/tickets\/[^/]+\/attachments\/[^/]+$/.test(p))response=await getAdminAttachment(request,env,p.split('/')[4]!,p.split('/')[6]!);
       else if(method==='GET'&&p==='/v1/admin/analytics')response=await adminAnalytics(request,env);
