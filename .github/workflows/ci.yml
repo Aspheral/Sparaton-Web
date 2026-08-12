@@ -4,8 +4,33 @@ on:
     branches: [main]
   pull_request:
 permissions:
-  contents: read
+  contents: write
 jobs:
+  lockfile:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Generate workspace lockfile
+        run: npm install
+      - name: Commit lockfile when missing or changed
+        shell: bash
+        run: |
+          git add package-lock.json
+          if git diff --cached --quiet; then
+            echo "package-lock.json is already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Lock workspace dependencies"
+          git push origin HEAD:main
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -16,14 +41,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install dependencies (lockfile bootstrap)
+      - name: Install dependencies
         run: npm install
-      - name: Preserve generated lockfile
-        uses: actions/upload-artifact@v4
-        with:
-          name: package-lock-bootstrap
-          path: package-lock.json
-          retention-days: 2
       - name: Static and type checks
         run: npm run check
       - name: Unit and integration tests
@@ -40,7 +59,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install dependencies (lockfile bootstrap)
+      - name: Install dependencies
         run: npm install
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium firefox webkit
