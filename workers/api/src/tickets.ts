@@ -1,5 +1,5 @@
 import { ACTIVE_TICKET_STATUSES, normalizeEmail } from '@sparaton/database';
-import { ResendEmailProvider, ticketReplyEmail, verificationEmail } from '@sparaton/email';
+import { ResendEmailProvider, verificationEmail } from '@sparaton/email';
 import type { Env } from './env';
 import { HttpError } from './access';
 import { hashToken, randomId, randomToken, sha256 } from './security';
@@ -8,18 +8,22 @@ const SESSION_COOKIE='sparaton_ticket';
 const SESSION_MAX_AGE_SECONDS=60*60*24*30;
 
 export async function createTicket(request:Request,env:Env):Promise<Response>{
+  if(!env.RESEND_API_KEY) throw new HttpError(503,'Ticket email verification is not configured yet');
   const contentType=request.headers.get('content-type')??'';
   const data=contentType.includes('application/json')?await request.json<Record<string,unknown>>():Object.fromEntries((await request.formData()).entries());
-  if (String(data.website??'')) throw new HttpError(400,'Invalid submission');
+  if(String(data.website??'')) throw new HttpError(400,'Invalid submission');
   const name=clean(data.name,100,true); const email=normalizeEmail(clean(data.email,254,true));
   const inquiryType=clean(data.inquiryType,60,true); const subject=clean(data.subject,180,true); const message=clean(data.message,12000,true);
-  const service=clean(data.service,120,false); const organization=clean(data.organization,160,false); const budget=clean(data.budgetRange,120,false); const preferredTeam=clean(data.preferredTeam,120,false);
-  if (!/^\S+@\S+\.\S+$/.test(email)) throw new HttpError(400,'Enter a valid email address');
+  const organization=clean(data.organization,160,false); const budget=clean(data.budgetRange,120,false); const preferredTeam=clean(data.preferredTeam,120,false);
+  if(!/^\S+@\S+\.\S+$/.test(email)) throw new HttpError(400,'Enter a valid email address');
   await enforceRateLimit(request,env,email);
 
   const placeholders=ACTIVE_TICKET_STATUSES.map((_,i)=>`?${i+2}`).join(',');
-  const existing=await env.DB.prepare(`SELECT public_id FROM tickets WHERE requester_email_normalized=?1 AND status IN (${placeholders}) ORDER BY created_at DESC LIMIT 1`).bind(email,...ACTIVE_TICKET_STATUSES).first<{public_id:string}>();
-  if (existing) return respond(request,{ existing:true, ticketPath:`/tickets/${existing.public_id}` },409);
+  const existing=await env.DB.prepare(`SELECT id,public_id,requester_name FROM tickets WHERE requester_email_normalized=?1 AND status IN (${placeholders}) ORDER BY created_at DESC LIMIT 1`).bind(email,...ACTIVE_TICKET_STATUSES).first<{id:string;public_id:string;requester_name:string}>();
+  if(existing){
+    await sendVerification(env,request,{ticketId:existing.id,publicId:existing.public_id,email,name:existing.requester_name},`existing-${Date.now()}`);
+    return respond(request,{existing:true,verificationSent:true},409);
+  }
 
   const ticketId=randomId('tkt'); const publicId=randomToken(16); const messageId=randomId('msg');
   await env.DB.batch([
@@ -28,31 +32,38 @@ export async function createTicket(request:Request,env:Env):Promise<Response>{
     env.DB.prepare('INSERT INTO ticket_participants (id,ticket_id,kind,participant_key) VALUES (?1,?2,\'client\',?3)').bind(randomId('par'),ticketId,email),
     env.DB.prepare('INSERT INTO ticket_status_events (id,ticket_id,previous_status,next_status,actor_kind,actor_id) VALUES (?1,?2,NULL,\'new\',\'client\',?3)').bind(randomId('evt'),ticketId,email)
   ]);
-  const rawToken=randomToken(); const tokenHash=await hashToken(rawToken,env.TICKET_TOKEN_PEPPER);
-  const expiresAt=new Date(Date.now()+30*60*1000).toISOString();
-  await env.DB.prepare('INSERT INTO email_verifications (id,ticket_id,email_normalized,token_hash,expires_at) VALUES (?1,?2,?3,?4,?5)').bind(randomId('ver'),ticketId,email,tokenHash,expiresAt).run();
-
-  if (env.RESEND_API_KEY) {
-    const provider=new ResendEmailProvider(env.RESEND_API_KEY);
-    const verifyUrl=`${new URL(request.url).origin}/v1/tickets/verify?token=${encodeURIComponent(rawToken)}`;
-    await provider.send({ ...verificationEmail({from:env.EMAIL_FROM_NOTIFICATIONS,to:email,name,verifyUrl}), idempotencyKey:`verify-${ticketId}` });
+  try {
+    await sendVerification(env,request,{ticketId,publicId,email,name},`new-${ticketId}`);
+  } catch(error) {
+    await env.DB.batch([
+      env.DB.prepare("UPDATE tickets SET status='archived',updated_at=CURRENT_TIMESTAMP WHERE id=?1").bind(ticketId),
+      env.DB.prepare("INSERT INTO audit_events(id,actor_kind,action,entity_type,entity_id,metadata_json) VALUES(?1,'system','ticket.verification_delivery_failed','ticket',?2,?3)").bind(randomId('aud'),ticketId,JSON.stringify({message:error instanceof Error?error.message:'unknown'}))
+    ]);
+    throw new HttpError(503,'We could not send the verification email. No active ticket was left open.');
   }
-  return respond(request,{ created:true, verificationRequired:true, emailConfigured:Boolean(env.RESEND_API_KEY) },201);
+  return respond(request,{created:true,verificationRequired:true},201);
+}
+
+async function sendVerification(env:Env,request:Request,input:{ticketId:string;publicId:string;email:string;name:string},key:string){
+  const rawToken=randomToken(); const tokenHash=await hashToken(rawToken,env.TICKET_TOKEN_PEPPER); const expiresAt=new Date(Date.now()+30*60*1000).toISOString();
+  await env.DB.prepare('INSERT INTO email_verifications (id,ticket_id,email_normalized,token_hash,expires_at) VALUES (?1,?2,?3,?4,?5)').bind(randomId('ver'),input.ticketId,input.email,tokenHash,expiresAt).run();
+  const provider=new ResendEmailProvider(env.RESEND_API_KEY!); const verifyUrl=`${new URL(request.url).origin}/v1/tickets/verify?token=${encodeURIComponent(rawToken)}`;
+  await provider.send({...verificationEmail({from:env.EMAIL_FROM_NOTIFICATIONS,to:input.email,name:input.name,verifyUrl}),idempotencyKey:`verify-${key}`});
 }
 
 export async function verifyTicket(request:Request,env:Env):Promise<Response>{
   const url=new URL(request.url); const raw=url.searchParams.get('token'); if(!raw) throw new HttpError(400,'Missing verification token');
   const tokenHash=await hashToken(raw,env.TICKET_TOKEN_PEPPER);
-  const verification=await env.DB.prepare('SELECT id,ticket_id,email_normalized,expires_at,used_at FROM email_verifications WHERE token_hash=?1').bind(tokenHash).first<{id:string;ticket_id:string;email_normalized:string;expires_at:string;used_at:string|null}>();
+  const verification=await env.DB.prepare('SELECT id,ticket_id,expires_at,used_at FROM email_verifications WHERE token_hash=?1').bind(tokenHash).first<{id:string;ticket_id:string;expires_at:string;used_at:string|null}>();
   if(!verification || verification.used_at || Date.parse(verification.expires_at)<=Date.now()) throw new HttpError(410,'Verification link has expired or already been used');
   const ticket=await env.DB.prepare('SELECT public_id FROM tickets WHERE id=?1').bind(verification.ticket_id).first<{public_id:string}>(); if(!ticket) throw new HttpError(404,'Ticket not found');
   const sessionToken=randomToken(); const sessionHash=await hashToken(sessionToken,env.SESSION_SIGNING_SECRET); const sessionId=randomId('ses'); const expires=new Date(Date.now()+SESSION_MAX_AGE_SECONDS*1000).toISOString();
   await env.DB.batch([
     env.DB.prepare('UPDATE email_verifications SET used_at=CURRENT_TIMESTAMP WHERE id=?1').bind(verification.id),
-    env.DB.prepare('UPDATE tickets SET requester_verified_at=COALESCE(requester_verified_at,CURRENT_TIMESTAMP), status=CASE WHEN status=\'new\' THEN \'open\' ELSE status END, updated_at=CURRENT_TIMESTAMP WHERE id=?1').bind(verification.ticket_id),
+    env.DB.prepare("UPDATE tickets SET requester_verified_at=COALESCE(requester_verified_at,CURRENT_TIMESTAMP), status=CASE WHEN status='new' THEN 'open' ELSE status END, updated_at=CURRENT_TIMESTAMP WHERE id=?1").bind(verification.ticket_id),
     env.DB.prepare('INSERT INTO ticket_access_sessions (id,ticket_id,token_hash,expires_at,last_seen_at) VALUES (?1,?2,?3,?4,CURRENT_TIMESTAMP)').bind(sessionId,verification.ticket_id,sessionHash,expires)
   ]);
-  return new Response(null,{status:302,headers:{'Location':`${env.STUDIOS_ORIGIN}/tickets/${ticket.public_id}`,'Set-Cookie':cookie(sessionToken,SESSION_MAX_AGE_SECONDS)}});
+  return new Response(null,{status:302,headers:{Location:`${env.STUDIOS_ORIGIN}/tickets/${ticket.public_id}`,'Set-Cookie':cookie(sessionToken,SESSION_MAX_AGE_SECONDS)}});
 }
 
 export async function getTicket(request:Request,env:Env,publicId:string):Promise<Response>{
@@ -65,44 +76,24 @@ export async function getTicket(request:Request,env:Env,publicId:string):Promise
 
 export async function postClientMessage(request:Request,env:Env,publicId:string):Promise<Response>{
   const auth=await authorizeTicket(request,env,publicId); const data=await request.json<{body?:unknown}>(); const body=clean(data.body,12000,true);
-  const ticket=await env.DB.prepare('SELECT subject,status FROM tickets WHERE id=?1').bind(auth.ticketId).first<{subject:string;status:string}>(); if(!ticket) throw new HttpError(404,'Ticket not found');
-  if(['closed','archived'].includes(ticket.status)) throw new HttpError(409,'This ticket is closed');
-  const messageId=randomId('msg');
-  await env.DB.batch([
-    env.DB.prepare('INSERT INTO ticket_messages (id,ticket_id,author_kind,body,safe_email_preview) VALUES (?1,?2,\'client\',?3,?4)').bind(messageId,auth.ticketId,body,safePreview(body)),
-    env.DB.prepare('UPDATE tickets SET status=\'awaiting_staff\',updated_at=CURRENT_TIMESTAMP,last_response_at=CURRENT_TIMESTAMP WHERE id=?1').bind(auth.ticketId),
-    env.DB.prepare('UPDATE ticket_participants SET unread_count=unread_count+1 WHERE ticket_id=?1 AND kind=\'staff\'').bind(auth.ticketId)
+  const ticket=await env.DB.prepare('SELECT status FROM tickets WHERE id=?1').bind(auth.ticketId).first<{status:string}>(); if(!ticket) throw new HttpError(404,'Ticket not found'); if(['closed','archived'].includes(ticket.status)) throw new HttpError(409,'This ticket is closed');
+  const messageId=randomId('msg'); await env.DB.batch([
+    env.DB.prepare("INSERT INTO ticket_messages (id,ticket_id,author_kind,body,safe_email_preview) VALUES (?1,?2,'client',?3,?4)").bind(messageId,auth.ticketId,body,safePreview(body)),
+    env.DB.prepare("UPDATE tickets SET status='awaiting_staff',updated_at=CURRENT_TIMESTAMP,last_response_at=CURRENT_TIMESTAMP WHERE id=?1").bind(auth.ticketId),
+    env.DB.prepare("UPDATE ticket_participants SET unread_count=unread_count+1 WHERE ticket_id=?1 AND kind='staff'").bind(auth.ticketId)
   ]);
-  const room=env.TICKET_ROOMS.get(env.TICKET_ROOMS.idFromName(publicId));
-  await room.fetch('https://room/broadcast',{method:'POST',body:JSON.stringify({type:'message',message:{id:messageId,author_kind:'client',body,created_at:new Date().toISOString()}})});
-  const presence=await room.fetch('https://room/presence'); const online=await presence.json<{staff:number}>();
+  const room=env.TICKET_ROOMS.get(env.TICKET_ROOMS.idFromName(publicId)); await room.fetch('https://room/broadcast',{method:'POST',body:JSON.stringify({type:'message',message:{id:messageId,author_kind:'client',body,created_at:new Date().toISOString()}})}); const online=await (await room.fetch('https://room/presence')).json<{staff:number}>();
   return json({id:messageId,staffOnline:online.staff>0},201);
 }
 
 export async function connectTicketSocket(request:Request,env:Env,publicId:string):Promise<Response>{
-  const auth=await authorizeTicket(request,env,publicId); const room=env.TICKET_ROOMS.get(env.TICKET_ROOMS.idFromName(publicId));
-  const headers=new Headers(request.headers); headers.set('x-sparaton-role','client'); headers.set('x-sparaton-participant',auth.sessionId);
-  return room.fetch(new Request('https://room/connect',{headers}));
+  const auth=await authorizeTicket(request,env,publicId); const room=env.TICKET_ROOMS.get(env.TICKET_ROOMS.idFromName(publicId)); const headers=new Headers(request.headers); headers.set('x-sparaton-role','client'); headers.set('x-sparaton-participant',auth.sessionId); return room.fetch(new Request('https://room/connect',{headers}));
 }
 
 export async function authorizeTicket(request:Request,env:Env,publicId:string){
-  const raw=parseCookie(request.headers.get('cookie')??'',SESSION_COOKIE); if(!raw) throw new HttpError(401,'Ticket access required');
-  const hash=await hashToken(raw,env.SESSION_SIGNING_SECRET);
-  const row=await env.DB.prepare('SELECT s.id AS session_id,s.ticket_id FROM ticket_access_sessions s JOIN tickets t ON t.id=s.ticket_id WHERE s.token_hash=?1 AND t.public_id=?2 AND s.revoked_at IS NULL AND s.expires_at>CURRENT_TIMESTAMP').bind(hash,publicId).first<{session_id:string;ticket_id:string}>();
-  if(!row) throw new HttpError(401,'Ticket session is invalid or expired'); return {sessionId:row.session_id,ticketId:row.ticket_id};
+  const raw=parseCookie(request.headers.get('cookie')??'',SESSION_COOKIE); if(!raw) throw new HttpError(401,'Ticket access required'); const hash=await hashToken(raw,env.SESSION_SIGNING_SECRET);
+  const row=await env.DB.prepare('SELECT s.id AS session_id,s.ticket_id FROM ticket_access_sessions s JOIN tickets t ON t.id=s.ticket_id WHERE s.token_hash=?1 AND t.public_id=?2 AND s.revoked_at IS NULL AND s.expires_at>CURRENT_TIMESTAMP').bind(hash,publicId).first<{session_id:string;ticket_id:string}>(); if(!row) throw new HttpError(401,'Ticket session is invalid or expired'); return {sessionId:row.session_id,ticketId:row.ticket_id};
 }
 
-async function enforceRateLimit(request:Request,env:Env,email:string){
-  const ip=request.headers.get('cf-connecting-ip')??'unknown'; const key=await sha256(`${ip}:${email}`); const since=new Date(Date.now()-15*60*1000).toISOString();
-  const row=await env.DB.prepare('SELECT COUNT(*) AS count FROM rate_limit_events WHERE key_hash=?1 AND bucket=\'ticket-create\' AND occurred_at>=?2').bind(key,since).first<{count:number}>();
-  if((row?.count??0)>=5) throw new HttpError(429,'Too many attempts. Try again later.');
-  await env.DB.prepare('INSERT INTO rate_limit_events (key_hash,bucket) VALUES (?1,\'ticket-create\')').bind(key).run();
-}
-
-function clean(value:unknown,max:number,required:boolean):string { const result=typeof value==='string'?value.trim():''; if(required&&!result) throw new HttpError(400,'Required field missing'); if(result.length>max) throw new HttpError(400,'Field is too long'); return result; }
-function safePreview(body:string){return body.replace(/\s+/g,' ').slice(0,240);}
-function cookie(value:string,maxAge:number){return `${SESSION_COOKIE}=${value}; Path=/; Domain=.sparaton.com; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`;}
-function parseCookie(header:string,name:string){for(const item of header.split(';')){const [key,...rest]=item.trim().split('=');if(key===name)return rest.join('=');}return null;}
-function json(data:unknown,status=200){return new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});}
-function respond(request:Request,data:unknown,status:number){const accepts=request.headers.get('accept')??'';if(accepts.includes('text/html'))return new Response(`<main style="font-family:system-ui;max-width:48rem;margin:10vh auto;padding:2rem"><h1>Inquiry received</h1><p>${status===201?'Check your email for the verification link.':'You already have an active ticket.'}</p><p><a href="${envSafeOrigin(request)}">Return to Sparaton</a></p></main>`,{status,headers:{'content-type':'text/html; charset=utf-8'}});return json(data,status);}
-function envSafeOrigin(request:Request){const origin=request.headers.get('origin');return origin?.endsWith('.sparaton.com')||origin==='https://sparaton.com'?origin:'https://sparaton.com';}
+async function enforceRateLimit(request:Request,env:Env,email:string){const ip=request.headers.get('cf-connecting-ip')??'unknown';const key=await sha256(`${ip}:${email}`);const since=new Date(Date.now()-15*60*1000).toISOString();const row=await env.DB.prepare("SELECT COUNT(*) AS count FROM rate_limit_events WHERE key_hash=?1 AND bucket='ticket-create' AND occurred_at>=?2").bind(key,since).first<{count:number}>();if((row?.count??0)>=5)throw new HttpError(429,'Too many attempts. Try again later.');await env.DB.prepare("INSERT INTO rate_limit_events (key_hash,bucket) VALUES (?1,'ticket-create')").bind(key).run();}
+function clean(value:unknown,max:number,required:boolean){const result=typeof value==='string'?value.trim():'';if(required&&!result)throw new HttpError(400,'Required field missing');if(result.length>max)throw new HttpError(400,'Field is too long');return result;}function safePreview(body:string){return body.replace(/\s+/g,' ').slice(0,240);}function cookie(value:string,maxAge:number){return `${SESSION_COOKIE}=${value}; Path=/; Domain=.sparaton.com; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`;}function parseCookie(header:string,name:string){for(const item of header.split(';')){const [key,...rest]=item.trim().split('=');if(key===name)return rest.join('=');}return null;}function json(data:unknown,status=200){return new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});}function respond(request:Request,data:unknown,status:number){const accepts=request.headers.get('accept')??'';if(accepts.includes('text/html'))return new Response(`<main style="font-family:system-ui;max-width:48rem;margin:10vh auto;padding:2rem"><h1>${status===201?'Check your email':'Existing conversation found'}</h1><p>${status===201?'We sent a secure verification link.':'We sent a fresh secure link to your existing ticket.'}</p><p><a href="https://sparaton.com">Return to Sparaton</a></p></main>`,{status,headers:{'content-type':'text/html; charset=utf-8'}});return json(data,status);}
