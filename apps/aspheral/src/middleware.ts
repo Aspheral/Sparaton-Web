@@ -9,6 +9,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     url: context.url,
     production: import.meta.env.PROD,
     nonce,
+    canonicalOrigin: 'https://aspheral.sparaton.com',
     formAction: ['https://sparaton.com'],
     connectSrc: ['https://api.sparaton.com', 'wss://api.sparaton.com']
   }));

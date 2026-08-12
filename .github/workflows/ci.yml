@@ -72,13 +72,13 @@ jobs:
           cache: npm
       - name: Install locked dependencies
         run: npm ci
-      - name: Build every workspace
+      - name: Build every workspace and generate brand fallbacks
         run: npm run build
 
   browser:
     name: Browser and E2E tests
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -98,3 +98,13 @@ jobs:
         run: npx playwright install --with-deps chromium firefox webkit
       - name: Run Chromium, Firefox, WebKit, and mobile Chromium
         run: npm run test:e2e
+      - name: Retain browser failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-failure-${{ github.run_id }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7

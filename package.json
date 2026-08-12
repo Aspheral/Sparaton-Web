@@ -11,11 +11,17 @@
     "dev:ilmp": "npm --workspace @sparaton/ilmp run dev",
     "dev:admin": "npm --workspace @sparaton/admin run dev",
     "dev:api": "npm --workspace @sparaton/api run dev",
+    "prebuild": "node scripts/generate-brand-assets.mjs",
     "build": "npm run build -ws --if-present",
     "check": "npm run check -ws --if-present",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "validate:staging": "node scripts/validate-deployment-config.mjs --environment staging",
+    "validate:production": "node scripts/validate-deployment-config.mjs --environment production",
+    "backup:staging": "node scripts/backup-d1.mjs staging",
+    "backup:production": "node scripts/backup-d1.mjs production",
+    "deploy:staging": "node scripts/deploy.mjs staging"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",

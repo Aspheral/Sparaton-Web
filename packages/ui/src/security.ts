@@ -8,6 +8,7 @@ export type SecurityHeaderOptions = {
   referrerPolicy?: string;
   admin?: boolean;
   allowInlineScripts?: boolean;
+  canonicalOrigin?: string;
 };
 
 export function createCspNonce(): string {
@@ -48,14 +49,11 @@ export function buildSecurityHeaders(options: SecurityHeaderOptions): Record<str
     'X-Frame-Options': 'DENY'
   };
 
-  if (secureProduction) {
-    headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
-  }
+  if (secureProduction) headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
 
-  if (options.admin) {
-    headers['X-Robots-Tag'] = 'noindex, nofollow, noarchive';
-    headers['Cache-Control'] = 'no-store';
-  }
+  const nonCanonical = options.canonicalOrigin && url.origin !== options.canonicalOrigin;
+  if (options.admin || nonCanonical) headers['X-Robots-Tag'] = 'noindex, nofollow, noarchive';
+  if (options.admin) headers['Cache-Control'] = 'no-store';
 
   return headers;
 }
