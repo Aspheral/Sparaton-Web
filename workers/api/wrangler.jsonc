@@ -1,0 +1,25 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "sparaton-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-11",
+  "observability": { "enabled": true },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "sparaton-db",
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "migrations_dir": "../../packages/database/migrations"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [{ "name": "TICKET_ROOMS", "class_name": "TicketRoom" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["TicketRoom"] }],
+  "vars": {
+    "STUDIOS_ORIGIN": "https://sparaton.com",
+    "ADMIN_ORIGIN": "https://admin.sparaton.com",
+    "EMAIL_FROM_NOTIFICATIONS": "notifications@sparaton.com",
+    "EMAIL_FROM_TICKETS": "tickets@sparaton.com"
+  }
+}
