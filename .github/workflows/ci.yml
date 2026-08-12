@@ -4,12 +4,13 @@ on:
     branches: [main]
   pull_request:
 permissions:
-  contents: write
+  contents: read
+
 jobs:
-  lockfile:
-    if: github.event_name == 'push'
+  static:
+    name: Static and type checks
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -17,21 +18,31 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Generate workspace lockfile
-        run: npm install
-      - name: Commit lockfile when missing or changed
-        shell: bash
-        run: |
-          git add package-lock.json
-          if git diff --cached --quiet; then
-            echo "package-lock.json is already current."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Lock workspace dependencies"
-          git push origin HEAD:main
-  verify:
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Astro and TypeScript checks
+        run: npm run check
+
+  tests:
+    name: Unit and integration tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Vitest
+        run: npm test
+
+  build:
+    name: Production builds
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -41,15 +52,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install dependencies
-        run: npm install
-      - name: Static and type checks
-        run: npm run check
-      - name: Unit and integration tests
-        run: npm test
-      - name: Production builds
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Build every workspace
         run: npm run build
+
   browser:
+    name: Browser and E2E tests
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -59,9 +69,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install dependencies
-        run: npm install
-      - name: Install Playwright browsers
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+      - name: Install Playwright browsers and system dependencies
         run: npx playwright install --with-deps chromium firefox webkit
-      - name: Browser and E2E tests
+      - name: Run Chromium, Firefox, WebKit, and mobile Chromium
         run: npm run test:e2e
