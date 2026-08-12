@@ -41,6 +41,23 @@ jobs:
       - name: Vitest
         run: npm test
 
+  migrations:
+    name: Isolated D1 migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Apply migrations to local test D1
+        run: npm --workspace @sparaton/api run db:migrate:test
+
   build:
     name: Production builds
     runs-on: ubuntu-latest
