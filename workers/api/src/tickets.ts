@@ -9,7 +9,7 @@ const SESSION_COOKIE='sparaton_ticket';
 const SESSION_MAX_AGE_SECONDS=60*60*24*30;
 
 export async function createTicket(request:Request,env:Env):Promise<Response>{
-  if(!env.RESEND_API_KEY)throw new HttpError(503,'Ticket email verification is not configured yet');
+  if(env.EMAIL_DELIVERY_MODE==='disabled'||!env.RESEND_API_KEY)throw new HttpError(503,'Ticket email verification is not configured yet');
   const contentType=request.headers.get('content-type')??'';
   const data=contentType.includes('application/json')?await request.json<Record<string,unknown>>():Object.fromEntries((await request.formData()).entries());
   if(String(data.website??''))throw new HttpError(400,'Invalid submission');
@@ -37,9 +37,10 @@ export async function createTicket(request:Request,env:Env):Promise<Response>{
 }
 
 async function sendVerification(env:Env,request:Request,input:{ticketId:string;email:string;name:string},key:string){
+  if(env.EMAIL_DELIVERY_MODE==='disabled'||!env.RESEND_API_KEY)throw new HttpError(503,'Ticket email verification is disabled for this environment');
   const rawToken=randomToken(),tokenHash=await hashToken(rawToken,env.TICKET_TOKEN_PEPPER),expiresAt=new Date(Date.now()+30*60*1000).toISOString();
   await env.DB.prepare('INSERT INTO email_verifications (id,ticket_id,email_normalized,token_hash,expires_at) VALUES (?1,?2,?3,?4,?5)').bind(randomId('ver'),input.ticketId,input.email,tokenHash,expiresAt).run();
-  const provider=new ResendEmailProvider(env.RESEND_API_KEY!),verifyUrl=`${new URL(request.url).origin}/v1/tickets/verify?token=${encodeURIComponent(rawToken)}`;
+  const provider=new ResendEmailProvider(env.RESEND_API_KEY),verifyUrl=`${new URL(request.url).origin}/v1/tickets/verify?token=${encodeURIComponent(rawToken)}`;
   await provider.send({...verificationEmail({from:env.EMAIL_FROM_NOTIFICATIONS,to:input.email,name:input.name,verifyUrl}),idempotencyKey:`verify-${key}`});
 }
 
