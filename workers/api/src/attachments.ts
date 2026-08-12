@@ -16,6 +16,17 @@ const TYPES:Record<string,{mimes:string[];kind:'pdf'|'png'|'jpg'|'gif'|'webp'|'t
   md:{mimes:['text/markdown','text/plain'],kind:'text'}
 };
 
+export async function listClientAttachments(request:Request,env:Env,publicId:string):Promise<Response>{
+  const auth=await authorizeTicket(request,env,publicId);
+  return listAttachments(env,auth.ticketId,false);
+}
+
+export async function listAdminAttachments(request:Request,env:Env,publicId:string):Promise<Response>{
+  await requireAdmin(request,env,STAFF_ROLES);
+  const ticket=await env.DB.prepare('SELECT id FROM tickets WHERE public_id=?1').bind(publicId).first<{id:string}>();if(!ticket)throw new HttpError(404,'Ticket not found');
+  return listAttachments(env,ticket.id,true);
+}
+
 export async function uploadClientAttachment(request:Request,env:Env,publicId:string):Promise<Response>{
   const auth=await authorizeTicket(request,env,publicId);
   if(request.headers.get('x-sparaton-csrf')!==auth.csrf)throw new HttpError(403,'Invalid request token');
@@ -38,6 +49,11 @@ export async function getAdminAttachment(request:Request,env:Env,publicId:string
   await requireAdmin(request,env,STAFF_ROLES);
   const ticket=await env.DB.prepare('SELECT id FROM tickets WHERE public_id=?1').bind(publicId).first<{id:string}>();if(!ticket)throw new HttpError(404,'Ticket not found');
   return serveAttachment(env,ticket.id,attachmentId,true);
+}
+
+async function listAttachments(env:Env,ticketId:string,allowInternal:boolean){
+  const rows=await env.DB.prepare(`SELECT a.id,a.original_filename,a.visibility,a.created_at,m.mime_type,m.byte_size,m.sha256,m.uploaded_by FROM attachments a JOIN media m ON m.id=a.media_id WHERE a.ticket_id=?1 ${allowInternal?'':"AND a.visibility='client'"} ORDER BY a.created_at,a.id`).bind(ticketId).all();
+  return json({attachments:rows.results});
 }
 
 async function storeAttachment(request:Request,env:Env,context:{ticketId:string;publicId:string;visibility:'client'|'internal';uploadedBy:string;actorKind:'client'|'staff'}):Promise<Response>{
