@@ -19,7 +19,15 @@ const canonicalUrl = new URL(canonical, 'https://sparaton.com');
     <meta property="og:site_name" content="Sparaton Studios" />
     <meta name="twitter:card" content="summary_large_image" />
     <title>{title}</title>
-    <script is:inline>{`(() => { try { const s=localStorage.getItem('sparaton-theme'); const d=matchMedia('(prefers-color-scheme: dark)').matches; document.documentElement.dataset.theme=(s==='light'||s==='dark')?s:(d?'dark':'light'); } catch {} })();`}</script>
+    <script is:inline>
+      (() => {
+        try {
+          const saved = localStorage.getItem('sparaton-theme');
+          const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.dataset.theme = saved === 'light' || saved === 'dark' ? saved : dark ? 'dark' : 'light';
+        } catch {}
+      })();
+    </script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify({ '@context':'https://schema.org', '@type':'Organization', name:'Sparaton Studios', url:'https://sparaton.com', founder:[{ '@type':'Person', name:'Rocko Sparacino' },{ '@type':'Person', name:'Koah Seaton' }] })}></script>
   </head>
   <body>
@@ -40,6 +48,12 @@ const canonicalUrl = new URL(canonical, 'https://sparaton.com');
         <div><strong>Elsewhere</strong><ul><li><a href="https://github.com/Aspheral">GitHub</a></li><li><a href="https://discord.com/users/886356555774193674">Aspheral on Discord</a></li></ul></div>
       </div>
     </footer>
-    <script is:inline>{`document.getElementById('theme-toggle')?.addEventListener('click',()=>{const n=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=n;localStorage.setItem('sparaton-theme',n);});`}</script>
+    <script is:inline>
+      document.getElementById('theme-toggle')?.addEventListener('click', () => {
+        const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        document.documentElement.dataset.theme = next;
+        localStorage.setItem('sparaton-theme', next);
+      });
+    </script>
   </body>
 </html>
