@@ -20,7 +20,7 @@ const canonicalUrl = new URL(canonical, 'https://sparaton.com');
     <meta name="twitter:card" content="summary_large_image" />
     <title>{title}</title>
     <script is:inline>{`(() => { try { const s=localStorage.getItem('sparaton-theme'); const d=matchMedia('(prefers-color-scheme: dark)').matches; document.documentElement.dataset.theme=(s==='light'||s==='dark')?s:(d?'dark':'light'); } catch {} })();`}</script>
-    <script type="application/ld+json" set:html={JSON.stringify({ '@context':'https://schema.org', '@type':'Organization', name:'Sparaton Studios', url:'https://sparaton.com', founder:[{ '@type':'Person', name:'Rocko Sparacino' },{ '@type':'Person', name:'Koah Seaton' }] })}></script>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify({ '@context':'https://schema.org', '@type':'Organization', name:'Sparaton Studios', url:'https://sparaton.com', founder:[{ '@type':'Person', name:'Rocko Sparacino' },{ '@type':'Person', name:'Koah Seaton' }] })}></script>
   </head>
   <body>
     <a class="skip-link" href="#content">Skip to content</a>

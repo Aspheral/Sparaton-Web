@@ -10,40 +10,39 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install --package-lock=false
-      - name: Strict checks
-        id: strict-checks
-        shell: bash
-        run: |
-          set +e
-          npm run check 2>&1 | tee strict-checks.log
-          status=${PIPESTATUS[0]}
-          echo "status=$status" >> "$GITHUB_OUTPUT"
-          exit 0
-      - name: Upload strict-check diagnostics
-        if: always()
+      - name: Install dependencies (lockfile bootstrap)
+        run: npm install
+      - name: Preserve generated lockfile
         uses: actions/upload-artifact@v4
         with:
-          name: strict-check-diagnostics
-          path: strict-checks.log
-          retention-days: 7
-      - name: Enforce strict-check result
-        if: steps.strict-checks.outputs.status != '0'
-        run: exit 1
-      - run: npm test
-      - run: npm run build
+          name: package-lock-bootstrap
+          path: package-lock.json
+          retention-days: 2
+      - name: Static and type checks
+        run: npm run check
+      - name: Unit and integration tests
+        run: npm test
+      - name: Production builds
+        run: npm run build
   browser:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install --package-lock=false
-      - run: npx playwright install --with-deps chromium firefox webkit
-      - run: npm run test:e2e
+      - name: Install dependencies (lockfile bootstrap)
+        run: npm install
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium firefox webkit
+      - name: Browser and E2E tests
+        run: npm run test:e2e
