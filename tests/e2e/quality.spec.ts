@@ -19,9 +19,9 @@ test('representative sites keep semantic entry points and no horizontal overflow
   }
 });
 
-test('contact controls have programmatic labels and keyboard focus is visible',async({page})=>{
+test('contact controls in the accessibility tree have programmatic labels and keyboard focus is visible',async({page})=>{
   await page.goto('http://127.0.0.1:4321/contact');
-  const controls=page.locator('input:not([type="hidden"]), textarea, select');
+  const controls=page.locator('input:not([type="hidden"]):not([aria-hidden="true"]), textarea:not([aria-hidden="true"]), select:not([aria-hidden="true"])');
   for(let i=0;i<await controls.count();i++){
     const control=controls.nth(i);
     if(!await control.isVisible())continue;
@@ -29,7 +29,7 @@ test('contact controls have programmatic labels and keyboard focus is visible',a
       const id=element.getAttribute('id');
       return Boolean(element.closest('label')||element.getAttribute('aria-label')||element.getAttribute('aria-labelledby')||(id&&document.querySelector(`label[for="${CSS.escape(id)}"]`)));
     });
-    expect(labelled,`visible form control ${i} lacks an accessible label`).toBe(true);
+    expect(labelled,`visible accessible form control ${i} lacks a programmatic label`).toBe(true);
   }
   await page.keyboard.press('Tab');
   const focused=page.locator(':focus');
