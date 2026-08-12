@@ -12,12 +12,14 @@
     "dev:api": "npm --workspace @sparaton/api run dev",
     "build": "npm run build -ws --if-present",
     "check": "npm run check -ws --if-present",
-    "test": "npm run test -ws --if-present",
+    "test": "vitest run",
     "test:e2e": "playwright test",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "@playwright/test": "^1.55.0",
+    "@astrojs/check": "^0.9.9",
+    "@cloudflare/workers-types": "^5.20260729.1",
+    "@playwright/test": "^1.62.0",
     "typescript": "^5.9.2",
     "vitest": "^4.1.10"
   }

@@ -1,14 +1,1 @@
-{
-  "name": "@sparaton/studios",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
-  "scripts": { "dev": "astro dev", "build": "astro build", "check": "astro check" },
-  "dependencies": {
-    "@astrojs/cloudflare": "^14.1.6",
-    "@sparaton/content": "0.1.0",
-    "@sparaton/ui": "0.1.0",
-    "astro": "^7.1.6",
-    "tailwindcss": "^4.3.3"
-  }
-}
+{"name":"@sparaton/studios","version":"0.1.0","private":true,"type":"module","scripts":{"dev":"astro dev","build":"astro build","check":"astro check"},"dependencies":{"@astrojs/cloudflare":"^14.1.6","@sparaton/content":"0.1.0","@sparaton/ui":"0.1.0","astro":"^7.1.6"}}
