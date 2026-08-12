@@ -1,8 +1,40 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 const selectedService = Astro.url.searchParams.get('service') ?? '';
+const nonce=(Astro.locals as {cspNonce?:string}).cspNonce;
 ---
 <BaseLayout title="Contact | Sparaton Studios" description="Start a private inquiry with Sparaton Studios.">
   <section class="shell hero"><div><p class="eyebrow">Contact</p><h1>Tell us what you are trying to make.</h1></div><p class="lede">Your inquiry becomes a private Sparaton ticket. We verify your email before providing access to the conversation.</p></section>
-  <section class="section"><div class="shell"><form class="form-grid" method="post" action="https://api.sparaton.com/v1/tickets"><input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-10000px" aria-hidden="true" /><label>Name<input required name="name" maxlength="100" autocomplete="name" /></label><label>Email<input required type="email" name="email" maxlength="254" autocomplete="email" /></label><label>Inquiry type<select required name="inquiryType"><option value="commission">Commission</option><option value="collaboration">Collaboration</option><option value="project">Project question</option><option value="business">Business inquiry</option><option value="other">Other</option></select></label><label>Desired service<input name="service" value={selectedService} maxlength="120" /></label><label>Subject<input required name="subject" maxlength="180" /></label><label>Message<textarea required name="message" maxlength="12000"></textarea></label><button class="button" type="submit">Create private inquiry →</button><p class="muted">One verified email address may have one active ticket at a time. If you already have one, we will take you back to that conversation.</p></form></div></section>
+  <section class="section"><div class="shell"><form id="contact-form" class="form-grid" method="post" action="https://api.sparaton.com/v1/tickets"><input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-10000px" aria-hidden="true" /><label>Name<input required name="name" maxlength="100" autocomplete="name" /></label><label>Email<input required type="email" name="email" maxlength="254" autocomplete="email" /></label><label>Inquiry type<select required name="inquiryType"><option value="commission">Commission</option><option value="collaboration">Collaboration</option><option value="project">Project question</option><option value="business">Business inquiry</option><option value="other">Other</option></select></label><label>Desired service<input name="service" value={selectedService} maxlength="120" /></label><label>Subject<input required name="subject" maxlength="180" /></label><label>Message<textarea required name="message" maxlength="12000"></textarea></label><button class="button" type="submit">Create private inquiry →</button><p id="contact-status" role="status" aria-live="polite" class="muted">One verified email address may have one active ticket at a time. If you already have one, we will send a fresh secure link to that conversation.</p></form></div></section>
+  <script is:inline nonce={nonce}>
+    const form=document.getElementById('contact-form');
+    const status=document.getElementById('contact-status');
+    form?.addEventListener('submit',async(event)=>{
+      event.preventDefault();
+      if(!form.reportValidity()) return;
+      const button=form.querySelector('button[type="submit"]');
+      button?.setAttribute('disabled','');
+      status.textContent='Creating your private inquiry…';
+      try{
+        const response=await fetch(form.action,{method:'POST',body:new FormData(form),headers:{accept:'application/json'}});
+        const data=await response.json().catch(()=>({}));
+        if(response.status===201){
+          status.textContent='Your message was saved as a private Sparaton ticket. Check your email for the secure verification link before opening the conversation.';
+          form.reset();
+        }else if(response.status===409&&data.verificationSent){
+          status.textContent='An active ticket already exists for that email, so a second ticket was not created. We sent a fresh secure link to the existing conversation.';
+        }else if(response.status===429){
+          status.textContent='Too many recent attempts were received. Nothing new was created. Try again later.';
+        }else if(response.status===503){
+          status.textContent=data.error||'Email verification is temporarily unavailable. The service did not leave an unverified active ticket behind.';
+        }else{
+          status.textContent=data.error||`The inquiry could not be created (HTTP ${response.status}). Review the form and try again.`;
+        }
+      }catch{
+        status.textContent='Sparaton could not reach the ticket service. The browser did not receive confirmation that a new ticket was saved. Please try again when the service is reachable.';
+      }finally{
+        button?.removeAttribute('disabled');
+      }
+    });
+  </script>
 </BaseLayout>
