@@ -1,183 +1,229 @@
 # Sparaton implementation status
 
-This is the production-readiness ledger for `Aspheral/Sparaton-Web`. Statuses describe the repository state, not whether account-specific Cloudflare, Resend, R2, DNS, or legal launch actions have been completed.
+This is the production-readiness ledger for `Aspheral/Sparaton-Web` after the third production engineering pass. Statuses describe the repository state. They do **not** imply that real Cloudflare resources, Resend credentials, DNS, legal policy, or the canonical Sparaton hostnames have been provisioned or verified.
 
 Legend:
 
-- **IMPLEMENTED** — the engineering path exists and is covered by the repository's validation gates where practical.
-- **PARTIAL** — useful implementation exists, but an identified engineering or production-verification gap remains.
-- **BLOCKED** — engineering is prepared, but completion requires owner credentials, account configuration, legal confirmation, or real production infrastructure.
-- **NOT IMPLEMENTED** — no production-capable implementation exists yet.
+- **IMPLEMENTED** — a production-capable engineering path exists and is exercised by repository validation where practical.
+- **PARTIAL** — useful implementation exists, but a known engineering, policy, or real-environment verification gap remains.
+- **BLOCKED** — engineering is prepared, but completion requires owner credentials, account configuration, legal confirmation, or authorized real infrastructure.
+- **NOT IMPLEMENTED** — no production-capable implementation exists.
 
-## Platform and CI
+## Third-pass CI baseline
 
 | Status | Requirement | Implementation |
 | --- | --- | --- |
-| IMPLEMENTED | Astro / Cloudflare monorepo retained | `apps/studios`, `apps/aspheral`, `apps/ilmp`, `apps/admin`, `workers/api`, shared packages. No competing rewrite was introduced. |
-| IMPLEMENTED | Reproducible install | Tracked `package-lock.json`; CI uses `npm ci`. |
-| IMPLEMENTED | Vitest / Playwright isolation | `vitest.config.ts` explicitly excludes `tests/e2e/**`; `playwright.config.ts` owns browser discovery. |
-| IMPLEMENTED | Correct Playwright web server forwarding | Playwright starts Studios with `npm --workspace @sparaton/studios run dev -- --host 127.0.0.1 --port 4321`. |
-| IMPLEMENTED | Separated CI responsibilities | `.github/workflows/ci.yml` separates D1 migration verification, static/type checks, unit/integration tests, production builds, and browser/E2E tests. |
-| IMPLEMENTED | Browser matrix | Chromium, Firefox, WebKit, and Mobile Chromium remain configured. |
-| IMPLEMENTED | Worker type-check isolation | `workers/api/tsconfig.json` scopes Worker TypeScript checks to Worker source without weakening Astro application checks. |
-| PARTIAL | Final green CI on the second-pass final commit | GitHub Actions is the authority. Do not call the pass green until every job succeeds on the final ledger commit. |
+| IMPLEMENTED | First fully green third-pass baseline | `45fad6c28738b5a0981bc4f73332ab324458c7d4`, GitHub Actions run `31556186299` / #80. |
+| IMPLEMENTED | Reproducible install | Tracked `package-lock.json`; all CI jobs use `npm ci`. |
+| IMPLEMENTED | Vitest / Playwright isolation | `vitest.config.ts` excludes `tests/e2e/**`; `playwright.config.ts` owns E2E discovery. |
+| IMPLEMENTED | Separated CI responsibilities | `.github/workflows/ci.yml` has independent static/type, unit/integration, isolated D1 migration, production-build, and browser/E2E jobs. |
+| IMPLEMENTED | Four-browser matrix | Chromium, Firefox, WebKit, and Mobile Chromium all execute. Playwright now starts Studios, Aspheral, ILMP, and Admin for cross-site QA. |
+| IMPLEMENTED | Browser failure artifacts | Failed browser jobs retain traces, screenshots, video, HTML report, and test results for seven days. |
+| IMPLEMENTED | WebKit local-TLS regression fixed at root | Shared environment-aware CSP/HSTS policy does not upgrade local HTTP to a nonexistent HTTPS origin; production HTTPS keeps HSTS and `upgrade-insecure-requests`. `tests/security-policy.test.ts` and E2E coverage guard this behavior. |
+| IMPLEMENTED | Static error-page type invariant | `apps/studios/src/pages/errors/[code].astro` narrows to an explicit supported-code union and typed copy record; no non-null assertion is used to hide the invariant. |
+
+GitHub Actions remains the final authority. The final completion report must use the workflow run for the final ledger commit, not infer success from an earlier SHA.
 
 ## Ticket and communication system
 
 | Status | Requirement | Implementation |
 | --- | --- | --- |
-| IMPLEMENTED | Canonical persisted ticket timeline | `workers/api/src/tickets.ts`, D1 ticket/message tables. |
-| IMPLEMENTED | One active ticket per verified email | Application checks plus database-level invariant in migrations. |
-| IMPLEMENTED | Hashed/expiring verification and access sessions | `workers/api/src/tickets.ts`, `workers/api/src/security.ts`; raw access tokens are not persisted. |
-| IMPLEMENTED | Client realtime messaging | Durable Object `workers/api/src/ticket-room.ts`, client ticket UI, reconnect state. |
-| IMPLEMENTED | Staff ticket detail workspace | `apps/admin/src/pages/tickets/[publicId].astro`, `apps/admin/public/ticket-workspace.js`. Complete conversation, requester/context, priority, status, assignment/transfer, notes, tags, status history, assignment history, audit and email-delivery history are exposed to authorized staff. |
-| IMPLEMENTED | Assignment / transfer / status / priority / resolve / close / reopen paths | `workers/api/src/admin.ts` with server-side role checks and audit events. |
-| IMPLEMENTED | Internal notes remain staff-only | Stored in `ticket_internal_notes`; returned only through Admin-authorized endpoints. Public/client APIs never merge notes into the client message timeline. |
-| IMPLEMENTED | Realtime staff presence and replies | Admin ticket socket and Durable Object presence; workspace displays reconnect/online state. |
-| IMPLEMENTED | Client-to-offline-staff email fallback | `workers/api/src/notifications.ts`; canonical message persists first, online staff suppress duplicate email, offline assigned staff receive notification when Resend is configured. |
-| IMPLEMENTED | Staff-to-offline-client email fallback | `workers/api/src/notifications.ts`; canonical reply persists first, online client suppresses duplicate email, offline client receives a safe preview and ticket link. |
-| IMPLEMENTED | Notification delivery history | `ticket_notification_deliveries` and Admin ticket history. Email failures do not roll back ticket messages. |
-| PARTIAL | Canned responses | Backend/ticket workspace is operable without them, but a reusable canned-response editor/picker is not implemented. |
+| IMPLEMENTED | Canonical persisted ticket timeline | D1 ticket/message state in `workers/api/src/tickets.ts`; email and realtime are transports around the canonical record. |
+| IMPLEMENTED | One active ticket per verified email | Application enforcement plus database invariant. Existing active conversations receive a fresh verification path instead of a second active ticket. |
+| IMPLEMENTED | Hashed/expiring verification and access sessions | `workers/api/src/security.ts`, `workers/api/src/tickets.ts`; raw session/verification tokens are not persisted. |
+| IMPLEMENTED | Realtime client/staff conversation | Durable Object `workers/api/src/ticket-room.ts`; both client and staff surfaces report reconnecting state instead of silently freezing. |
+| IMPLEMENTED | Staff ticket workspace | `apps/admin/src/pages/tickets/[publicId].astro`, `apps/admin/public/ticket-workspace.js`; complete client/staff timeline, requester/context, assignment, transfer, status/priority, tags, internal notes, history, audit, attachments, notification state, and presence. |
+| IMPLEMENTED | Assignment / transfer / resolve / close / reopen | `workers/api/src/admin.ts` with server-side role checks and status history. Closed/archived reply restrictions remain enforced. |
+| IMPLEMENTED | Internal-note privacy | Notes live in `ticket_internal_notes` and are returned only by Admin-authorized routes. They are never merged into the client message API or email fallback. |
+| IMPLEMENTED | Offline notification state machine | `workers/api/src/notifications.ts`; messages persist first, online recipients suppress duplicate fallback mail, offline recipients receive safe previews when email is configured, and delivery failures do not remove canonical messages. |
+| IMPLEMENTED | Staging email suppression | `EMAIL_DELIVERY_MODE=disabled` blocks notification and initial verification delivery. Staging cannot accidentally send real email merely because a Resend key is present. |
+| IMPLEMENTED | Canned response CRUD and picker | `workers/api/src/canned-responses.ts`, Admin Operations editor, and ticket composer picker. Selecting a template only inserts editable draft text and never sends automatically. |
+| PARTIAL | Organization/team-scoped canned-response audience enforcement | Templates store visibility, optional organization, and optional team metadata. The current staff GET path does not yet derive a staff organization/team identity model to hide out-of-scope templates automatically. Global staff templates are fully operable. |
+| IMPLEMENTED | Public contact failure clarity | `apps/studios/src/pages/contact.astro` gives explicit persisted/not-persisted states for success, existing-ticket, rate-limit, verification-provider, and network failures. |
 
-## Attachments
-
-| Status | Requirement | Implementation |
-| --- | --- | --- |
-| IMPLEMENTED | Private R2 architecture | `workers/api/src/attachments.ts`, `Env.ATTACHMENTS`, private randomized keys. |
-| IMPLEMENTED | Upload limits and validation | 10 MiB maximum; extension + MIME + content-signature inspection for allowed PDF/image/text types; executable/unrecognized content rejected. |
-| IMPLEMENTED | Collision/path traversal resistance | Random storage identifiers; original filenames sanitized and retained as metadata only. |
-| IMPLEMENTED | Authorized private retrieval | Separate client/staff authorization paths; internal attachments cannot be downloaded through client routes. |
-| IMPLEMENTED | Safe downloads | `Content-Disposition: attachment`, `nosniff`, private/no-store semantics, D1 metadata and SHA-256. |
-| IMPLEMENTED | Staff attachment workflow | Staff listing/upload/download and internal/client-visible selection in the ticket workspace. |
-| IMPLEMENTED | Client attachment workflow | Private client listing/upload/download route and client ticket experience. |
-| BLOCKED | Production R2 operation | Requires the owner-created R2 bucket and production Worker binding. No paid storage tier is enabled automatically. |
-
-## Admin CMS
+## Private ticket attachments
 
 | Status | Requirement | Implementation |
 | --- | --- | --- |
-| IMPLEMENTED | Database-backed content workspace | `apps/admin/src/pages/content.astro`, `apps/admin/public/content-admin.js`. |
-| IMPLEMENTED | People CRUD | D1-backed editor for display name, slug, role, biography, areas, image URL, availability, contact route, ordering, visibility and SEO. |
-| IMPLEMENTED | Organizations CRUD | D1-backed editor for name, slug, kind, relationship label, description, subdomain, logo/contact, ordering, visibility and SEO. |
-| IMPLEMENTED | Services CRUD | D1-backed editor for title, category, summary/body, scope, provider, organization, availability, supplied pricing text, inquiry CTA, ordering, visibility and SEO. |
-| IMPLEMENTED | Projects CRUD | Generic D1 project model with status/feature flags, repository/release/docs fields, Markdown body, publication state and SEO. |
-| IMPLEMENTED | Project metric editor | D1 upsert by project/key with label, value, qualifier, source/source URL, measured timestamp and measured/provisional/historical/target state. |
-| IMPLEMENTED | Posts CRUD | Draft/published Markdown publishing with type, project/organization association and SEO. |
-| IMPLEMENTED | Settings editor | D1-backed structured JSON settings for Owner/Administrator roles. |
-| IMPLEMENTED | SEO controls | SEO title/description, canonical override, social title/description/image and robots index control are available on structured content. Admin itself remains forcibly noindex. |
-| PARTIAL | Relationship-management ergonomics | Public data models and APIs support memberships, project credits and external links, but the second-pass CMS does not yet provide a dedicated visual relationship/social-link editor for all many-to-many relationships. |
-| PARTIAL | Rich media library | Ticket attachments use R2 securely, but a general public CMS media-library/editor is not yet complete. |
+| IMPLEMENTED | Private R2 architecture | `workers/api/src/attachments.ts`, `Env.ATTACHMENTS`; randomized keys and private-by-default ticket attachment semantics. |
+| IMPLEMENTED | Validation and limits | 10 MiB maximum, extension/MIME/content inspection, safe filenames, SHA-256 metadata, and rejection of unrecognized/executable content. |
+| IMPLEMENTED | Authorized retrieval | Separate client/staff authorization paths; internal staff attachments cannot be read through client routes. |
+| IMPLEMENTED | Safe download semantics | Attachment disposition, `nosniff`, private/no-store behavior, D1 metadata, collision/path-traversal resistance. |
+| IMPLEMENTED | Client and staff attachment UI | Both ticket surfaces can list/upload/download within their authorization boundary. Staff can choose client-visible or internal. |
+| BLOCKED | Real production ticket R2 operation | Requires owner-created production R2 bucket/binding and Cloudflare account configuration. |
 
-## Public publishing and search quality
+## Admin CMS and relationship management
 
 | Status | Requirement | Implementation |
 | --- | --- | --- |
-| IMPLEMENTED | Database-backed public project pages | `apps/studios/src/pages/projects/[slug].astro`, `workers/api/src/content.ts`. Draft/private projects are excluded. |
-| IMPLEMENTED | Database-backed article pages | `apps/studios/src/pages/news/[slug].astro`; only published posts are exposed. |
-| IMPLEMENTED | Database-backed person pages | `apps/studios/src/pages/people/[slug].astro`; respects public visibility. |
-| IMPLEMENTED | Database-backed organization pages | `apps/studios/src/pages/organizations/[slug].astro`; respects public visibility. |
-| IMPLEMENTED | Database-backed service pages | `apps/studios/src/pages/services/[slug].astro`; respects public visibility. |
-| IMPLEMENTED | Public directories | `/projects`, `/people`, `/organizations`, existing services/news areas; failures render truthful unavailable/empty states rather than fake records. |
-| IMPLEMENTED | Server rendering without client JS dependency | Dynamic detail pages retrieve structured API data server-side and render canonical HTML. |
-| IMPLEMENTED | Real missing-content status | Dynamic routes return 404 for unpublished/missing data and 503 when the backing service is unavailable. |
-| IMPLEMENTED | Dynamic sitemap | `apps/studios/src/pages/sitemap.xml.ts` derives URLs from public API collections and contains no manually duplicated dynamic-project/post list. |
-| IMPLEMENTED | Database-backed RSS | `apps/studios/src/pages/rss.xml.ts` emits published post entries from the public content API. |
-| IMPLEMENTED | Structured data | Studios organization plus page-appropriate Person, Article, SoftwareApplication/CreativeWork, Service and BreadcrumbList JSON-LD. Aspheral and Lattice Forge identify Sparaton Studios as the parent brand rather than reversing the hierarchy. |
-| IMPLEMENTED | Canonical / OG / Twitter metadata | Page layouts and structured detail pages provide canonical and social metadata. |
-| IMPLEMENTED | Original brand assets | Sparaton, Aspheral and ILMP SVG favicons/social preview art; Sparaton touch icon. |
-| PARTIAL | Raster icon fallbacks | Modern SVG icon path is implemented. Additional raster fallback sizes can be generated at final production branding/export time. |
+| IMPLEMENTED | Database-backed CMS | `apps/admin/src/pages/content.astro`, `apps/admin/public/content-admin.js`, Worker content endpoints. |
+| IMPLEMENTED | People / Organizations / Services / Projects / Posts / Settings CRUD | Structured D1-backed forms and authorized mutation paths are present. |
+| IMPLEMENTED | Project metric editor | Label/value/qualifier/source/source URL/measured timestamp and measured/provisional/historical/target state. |
+| IMPLEMENTED | SEO controls | Structured title/description/canonical/social metadata/robots controls. Admin remains forcibly non-indexable independently of content fields. |
+| IMPLEMENTED | Visual relationship management | `apps/admin/src/pages/operations.astro`, `apps/admin/public/operations.js`, `workers/api/src/relationships.ts`, migration `0005_third_pass.sql`. |
+| IMPLEMENTED | People relationships | Organization memberships, per-membership role, public membership state, primary organization flag, project credits, external/social links, ordering. |
+| IMPLEMENTED | Organization relationships | Members/roles, projects/credit labels, associated organizations/relationship labels, external/social links, ordering. |
+| IMPLEMENTED | Project relationships | Creators/contributors/credit labels, organizations/credit labels, related projects/relationship labels, external links, ordering. |
+| IMPLEMENTED | Duplicate/destructive relationship safety | Relationship updates are deduplicated and applied as D1 batches to join tables; deleting join state does not delete unrelated people/organizations/projects. Foreign keys define owned join cleanup. |
 
-## GitHub project metadata
+## General public CMS media library
 
 | Status | Requirement | Implementation |
 | --- | --- | --- |
-| IMPLEMENTED | Cached GitHub synchronization | `workers/api/src/github-sync.ts`, `project_github_metadata`, `integration_syncs`. |
-| IMPLEMENTED | Truthful release handling | Latest release is stored/displayed only when GitHub reports an actual release; no fake Download CTA is generated. |
-| IMPLEMENTED | Repository/default branch/languages/activity timestamp | Cached from GitHub and failure-tolerant. |
-| IMPLEMENTED | Kay canonical repository | Kay continues to use `https://github.com/Aspheral/Kay-Chess`; it is not moved into the website repository. |
-| IMPLEMENTED | External failure degradation | Sync failures update integration status/cache and do not make public project rendering depend on live GitHub availability. |
-| BLOCKED | Higher authenticated GitHub API quota | Optional `GITHUB_TOKEN` must be provided as a secret if the owner wants authenticated API quota. Public unauthenticated sync remains possible within GitHub limits. |
+| IMPLEMENTED | Public-media model is separate from ticket attachments | `content_media` / `content_media_usage` and `Env.CMS_MEDIA` use a distinct logical/storage path from private ticket `media`/`attachments` and `Env.ATTACHMENTS`. |
+| IMPLEMENTED | Authorized upload and library UI | `workers/api/src/cms-media.ts`, Admin Operations media library. Search/filter, upload, metadata edit, URL copy/select workflow, and guarded deletion are available to authorized staff. |
+| IMPLEMENTED | Server-side image safety | 15 MiB maximum; PNG/JPEG/GIF/WebP only; extension + MIME + signature/structure checks; server-side dimensions and pixel/dimension caps; randomized storage keys. |
+| IMPLEMENTED | Media metadata | SHA-256, dimensions, byte size, MIME, original filename, alt text, caption, focal point, uploader, timestamps. |
+| IMPLEMENTED | Hash deduplication | Identical uploads reuse the existing asset record by unique SHA-256. |
+| IMPLEMENTED | Usage/deletion protection | Usage records plus direct content-field lookups prevent deletion while an asset is referenced. |
+| IMPLEMENTED | Public delivery | Public CMS media endpoint emits explicit image MIME, `nosniff`, cache policy, ETag and sandboxed CSP. |
+| BLOCKED | Real staging/production CMS-media R2 operation | Requires owner-created `CMS_MEDIA` R2 buckets and bindings. The repository does not fabricate bucket IDs/account values. |
 
-## Analytics and operations
-
-| Status | Requirement | Implementation |
-| --- | --- | --- |
-| IMPLEMENTED | Real Cloudflare analytics integration | `workers/api/src/analytics.ts` uses Cloudflare's GraphQL analytics API, not sample graphs. |
-| IMPLEMENTED | Traffic ranges and dimensions | 24h / 7d / 30d; requests/visits, time data, popular routes, hostnames, referrers, countries, browser families and device categories where returned by Cloudflare. |
-| IMPLEMENTED | Cached analytics | D1 `integration_cache` avoids wasteful repeated GraphQL queries. |
-| IMPLEMENTED | Truthful unconfigured state | Admin clearly reports missing account/token/zone configuration. |
-| IMPLEMENTED | Operations health surface | Admin overview/operations UI reports configuration state for D1/API, Durable Objects, email, analytics, attachment storage and GitHub sync plus synchronization/error information without exposing secrets. |
-| BLOCKED | Real production traffic data | Requires production Cloudflare account/zone/API credentials and a deployed hostname receiving traffic. |
-
-## Security and error handling
+## Public publishing, metadata, and content integrity
 
 | Status | Requirement | Implementation |
 | --- | --- | --- |
-| IMPLEMENTED | Cloudflare Access + application roles | `workers/api/src/access.ts`, Admin same-origin proxy and server authorization. |
-| IMPLEMENTED | Secure API failure envelope | Structured errors, no public stack traces/secrets; API request IDs are available for diagnosis. |
-| IMPLEMENTED | CSP and security headers | Astro middleware on Studios, Aspheral, ILMP and Admin plus Worker response headers. No `unsafe-eval`; current CSP narrowly retains `unsafe-inline` for existing inline theme/JSON-LD behavior. |
-| IMPLEMENTED | Transport/browser headers | HSTS, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, anti-framing controls. |
-| IMPLEMENTED | Admin anti-indexing/cache controls | Admin middleware emits `X-Robots-Tag: noindex, nofollow, noarchive` and `Cache-Control: no-store`, in addition to page metadata. |
-| IMPLEMENTED | Branded not-found surfaces | Studios, Aspheral, ILMP and Admin have explicit 404 experiences. |
-| IMPLEMENTED | Public error vocabulary | Studios provides branded 400/401/403/404/429/500/503 surfaces; API errors remain structured JSON. |
-| IMPLEMENTED | Realtime disconnect state | Ticket clients/admin display reconnecting state and retry rather than silently freezing. |
-| IMPLEMENTED | Header regression tests | `tests/security.test.ts` verifies the middleware CSP/header baseline and Admin noindex/no-store behavior. |
-| PARTIAL | CSP nonce/hash hardening | `unsafe-inline` is still required by the current inline Astro theme/JSON-LD scripts. Removing it entirely would require a nonce/hash rollout or moving every inline script without regressing no-flash theming. `unsafe-eval` is not used. |
+| IMPLEMENTED | Database-backed public projects/posts/people/organizations/services | Server-rendered detail and directory routes use structured API data, exclude drafts/private records, and return real 404/503 states. |
+| IMPLEMENTED | Dynamic sitemap and RSS | Sitemap derives from actual public content collections; RSS derives from published posts. Ticket/Admin URLs are excluded. |
+| IMPLEMENTED | Structured data | Page-appropriate Organization, Person, Article, BreadcrumbList, SoftwareApplication/CreativeWork and Service schemas. Sparaton Studios remains the root parent brand. |
+| IMPLEMENTED | Canonical / OG / Twitter metadata | Public layouts and dynamic content routes emit canonical and social metadata. |
+| IMPLEMENTED | Web manifests and icon metadata | Public brand sites advertise their own manifests and theme colors. Admin advertises no public manifest. |
+| IMPLEMENTED | Raster brand fallback generation | `scripts/generate-brand-assets.mjs` deterministically exports 16×16, 32×32, 180×180, 192×192 and 512×512 PNGs from original Sparaton/Aspheral/ILMP geometry during clean production builds. SVG remains preferred. |
+| IMPLEMENTED | Repository content-integrity sweep | Repository search found no lorem ipsum, fake testimonials/customers/downloads, or hard-coded queried Kay Elo/ILMP benchmark claims in the audited tree. This is a code/content audit, not external verification of every future CMS record. |
+| BLOCKED | Final volatile claim verification | Any Kay rating, ILMP benchmark, release/download number, staff title or similar volatile claim must be re-verified immediately before real launch. |
+
+## GitHub metadata and Cloudflare analytics
+
+| Status | Requirement | Implementation |
+| --- | --- | --- |
+| IMPLEMENTED | Cached GitHub metadata synchronization | `workers/api/src/github-sync.ts`, `project_github_metadata`, integration cache/sync state. Release data is displayed only when GitHub reports a real release. |
+| IMPLEMENTED | Kay canonical repository | Kay remains associated with `https://github.com/Aspheral/Kay-Chess`. |
+| IMPLEMENTED | External failure degradation | GitHub API failure updates sync state/cache without breaking public project pages. |
+| BLOCKED | Optional authenticated GitHub quota | Requires owner-provided `GITHUB_TOKEN`; unauthenticated behavior remains the fallback. |
+| IMPLEMENTED | Real Cloudflare Analytics API integration | `workers/api/src/analytics.ts` uses Cloudflare GraphQL, with 24h/7d/30d ranges, request/visit/time/path/hostname/referrer/country/browser/device data where available, and D1 caching. |
+| IMPLEMENTED | Truthful unconfigured analytics state | Admin reports missing credentials instead of fabricating traffic. |
+| BLOCKED | Real production traffic | Requires deployed hostnames plus Cloudflare account/zone/API credentials and actual traffic. |
+
+## Privacy, retention, backup, and recovery
+
+| Status | Requirement | Implementation |
+| --- | --- | --- |
+| IMPLEMENTED | Requester lookup | Owner/Administrator privacy tooling can find ticket records by normalized verified requester email. |
+| IMPLEMENTED | Requester export | Export includes appropriate requester ticket/message/client-attachment/session/verification data while excluding raw token hashes and internal staff notes. |
+| IMPLEMENTED | Session closure and expired-record cleanup | Authorized tools can revoke requester sessions and delete already-expired verification/session records. No invented legal grace period is hard-coded. |
+| IMPLEMENTED | Policy-gated anonymization foundation | Anonymization requires the email twice, no active ticket, and explicit retention settings with `legalConfirmed` + `allowAnonymization`. Canonical message bodies and audit/security evidence are retained rather than blindly erased. |
+| PARTIAL | Automated retention execution | Retention settings exist for verification/session/attachment/audit categories, but attachment/audit expiry is deliberately not auto-applied until owner/legal policy is confirmed. |
+| BLOCKED | Final legal retention periods | The repository intentionally supplies no invented legal period. Owner/legal review must choose policy values and permissible deletion/anonymization behavior. |
+| IMPLEMENTED | D1 backup/export tooling | `scripts/backup-d1.mjs` wraps explicit read-only staging/production remote export. |
+| IMPLEMENTED | Guarded D1 restore tooling | `scripts/restore-d1.mjs` is dry-by-default, requires explicit restore confirmation, and adds a second shell guard for production. |
+| IMPLEMENTED | Recovery runbook | `docs/BACKUP-RECOVERY.md` covers pre-migration backups, migration failure, accidental deletion, ticket corruption, application rollback with advanced schema, and disaster-recovery checks. |
+| BLOCKED | Real production backup/restore rehearsal | Requires the actual owner Cloudflare production database, credentials, and explicit authorization. No production database was modified in this pass. |
+
+## Audit quality and operations visibility
+
+| Status | Requirement | Implementation |
+| --- | --- | --- |
+| IMPLEMENTED | Mutation audit trail foundation | Ticket assignment/status/tags/internal notes, content CRUD/publication, settings, relationship changes, media changes, canned responses, and privacy operations emit audit events with actor/action/target/timestamp. New third-pass paths add useful non-secret metadata. |
+| IMPLEMENTED | Audit search/filter UI | Admin Operations supports action/actor/target/free-text filtering and displays metadata/request IDs where recorded. |
+| IMPLEMENTED | Request correlation for new third-pass mutations | Relationship/media/canned/privacy paths write `audit_events.request_id`, populated from the Worker-generated request ID. |
+| PARTIAL | Uniform request-ID/metadata richness on legacy mutations | Some pre-third-pass content/ticket/settings audit helpers still emit correct actor/action/target/timestamp events without the newer request-ID column or equally rich metadata. No secrets are recorded. |
+| IMPLEMENTED | Operations health surface | Admin reports database/DO/email/analytics/attachments/GitHub configuration and sync/error state without displaying credentials or inventing provider quota. |
+
+## Security and CSP
+
+| Status | Requirement | Implementation |
+| --- | --- | --- |
+| IMPLEMENTED | Cloudflare Access + application roles | `workers/api/src/access.ts`, same-origin Admin proxy/headers and server-side role checks. |
+| IMPLEMENTED | Request IDs / safe failure envelope | API errors return structured request IDs and do not expose stack traces, SQL, Access JWT contents, or provider secrets. |
+| IMPLEMENTED | Shared transport-aware security policy | `packages/ui/src/security.ts` is used by Studios, Aspheral, ILMP and Admin middleware. Production HTTPS gets HSTS/upgrade; local HTTP does not. |
+| IMPLEMENTED | Public script CSP nonces | Studios, Aspheral and ILMP no-flash theme/bootstrap, JSON-LD and inline script behavior use per-request nonces. `unsafe-eval` is not permitted. |
+| IMPLEMENTED | Non-canonical/staging anti-indexing | Non-canonical public host origins receive `X-Robots-Tag: noindex, nofollow, noarchive`; Admin is always noindex/noarchive/no-store. |
+| IMPLEMENTED | Header regression coverage | Unit and E2E tests verify local-vs-production transport policy, nonce policy, Admin cache/indexing policy, and WebKit navigation. |
+| PARTIAL | Complete removal of `unsafe-inline` | `style-src 'unsafe-inline'` remains because the established Astro visual system still uses inline style blocks/attributes. Admin also retains a narrowly scoped inline-script allowance for its current no-flash bootstrap. No `unsafe-eval` is used. Full removal requires a deliberate style/bootstrap migration without visual/theme regression. |
+
+## Accessibility, responsive QA, and performance
+
+| Status | Requirement | Implementation |
+| --- | --- | --- |
+| IMPLEMENTED | Shared accessibility foundation | Skip links, visible focus styles, semantic headings, labels, reduced-motion handling and live regions are present in the shared/public/Admin surfaces. |
+| IMPLEMENTED | Automated cross-site accessibility checks | `tests/e2e/quality.spec.ts` exercises semantic entry points, skip targets, accessible contact-form controls, and keyboard focus. Intentionally `aria-hidden` anti-bot fields are excluded from the accessibility tree rather than falsely labeled. |
+| IMPLEMENTED | Automated responsive containment QA | Representative Studios, Aspheral, ILMP and Admin routes are exercised at 320, 768 and 1280 CSS-pixel widths for horizontal overflow/content containment, in every configured browser project. |
+| PARTIAL | Formal assistive-technology review | No claim of completed human VoiceOver/NVDA/screen-reader certification is made. A real manual assistive-technology review remains pre-launch QA. |
+| IMPLEMENTED | Static-friendly public performance architecture | Public QA asserts no Astro hydration islands on representative editorial routes and a small first-party script surface; public pages remain SSR/static-friendly rather than becoming a SPA. |
+| IMPLEMENTED | Core Web Vitals engineering targets | `docs/PRODUCTION-QA.md` records p75 targets of LCP ≤ 2.5 s, CLS ≤ 0.10, INP ≤ 200 ms and public hydration/cache discipline. |
+| PARTIAL | Real staging/production Lighthouse and field CWV | No fabricated Lighthouse/RUM score is recorded. Real measurements require a deployed staging/production hostname and representative content/network conditions. |
+| PARTIAL | Human visual QA | Automated responsive/overflow checks are implemented, but final human inspection of production typography, final imagery, color contrast and real long-form CMS content remains a staging/pre-launch task. |
+
+## Staging and deployment safety
+
+| Status | Requirement | Implementation |
+| --- | --- | --- |
+| IMPLEMENTED | Separate staging Worker configuration | `workers/api/wrangler.staging.jsonc` uses distinct staging Worker/D1/R2 names, placeholder staging origins, `DEPLOYMENT_ENV=staging`, and email disabled by default. |
+| IMPLEMENTED | Production/staging configuration validator | `scripts/validate-deployment-config.mjs` checks D1, DO, R2, environment/origins, owner placeholders and optional secret presence without printing secret values. It rejects obvious staging/production resource confusion. |
+| IMPLEMENTED | Explicit deployment workflow | `scripts/deploy.mjs` performs configuration validation, clean install/check/test/build and Worker deployment; production requires explicit confirmation and optional smoke URL must use HTTPS. |
+| IMPLEMENTED | Migration/deploy separation | Remote production D1 migrations are intentionally **not** silently run by the deploy script. Backup and migration are explicit controlled operator actions. |
+| IMPLEMENTED | Staging indexing/email safeguards | Non-canonical hosts are noindex; staging email mode defaults disabled and is enforced in ticket verification and fallback notification code. |
+| BLOCKED | Genuine Cloudflare staging deployment | Requires owner-created staging D1/R2/DO resources, Access setup, secrets, and assigned preview hostnames. No real staging resources were fabricated or deployed. |
+
+## Repository safety
+
+| Status | Requirement | Implementation |
+| --- | --- | --- |
+| IMPLEMENTED | Dependency/security maintenance scaffolding | `.github/dependabot.yml` covers npm and GitHub Actions; `.github/CODEOWNERS` keeps the repository owner visible on changes. |
+| IMPLEMENTED | Branch/security recommendations | `docs/REPOSITORY-SAFETY.md` documents required CI checks, force-push/deletion protection, secret scanning/push protection, vulnerability alerts and owner-bypass considerations. |
+| BLOCKED | Applying branch protection/repository rules | Deliberately left as an explicit owner action so this engineering pass does not silently lock the owner out of `main`. |
 
 ## Database and migrations
 
 | Status | Requirement | Implementation |
 | --- | --- | --- |
-| IMPLEMENTED | Normalized production schema | Organizations, people, memberships, links, projects, metrics, services, posts/authors, tickets/messages/participants/assignments/status/notes, sessions/verifications, media/attachments, roles, audit/settings/rate limiting. |
-| IMPLEMENTED | Operability migration | `packages/database/migrations/0003_operability.sql` adds SEO fields, tags, notification deliveries, GitHub metadata/cache/sync and media hashing support. |
-| IMPLEMENTED | Second-pass settings compatibility migration | `packages/database/migrations/0004_second_pass.sql` aligns settings key naming used by the Admin CMS. |
-| IMPLEMENTED | Isolated migration verification | CI applies migrations to an isolated local/test D1 database; production databases are not used by CI. |
-| PARTIAL | Production backup automation | Runbook/setup can be documented, but final backup validation depends on the actual Cloudflare production database/account. |
+| IMPLEMENTED | Normalized production schema | Existing organization/content/ticket/role/audit/cache schema retained. |
+| IMPLEMENTED | Operability migration | `0003_operability.sql`. |
+| IMPLEMENTED | Settings compatibility migration | `0004_second_pass.sql`. |
+| IMPLEMENTED | Third-pass migration | `0005_third_pass.sql` adds primary memberships, project/organization and related-project joins, public CMS media/usage, canned-response metadata, audit request IDs, and privacy-operation records. |
+| IMPLEMENTED | Isolated migration validation | CI applies the full migration chain to a deliberately isolated local/test D1 database, never a real production database. |
 
-## Design and accessibility
+## Production configuration blockers
 
-| Status | Requirement | Implementation |
-| --- | --- | --- |
-| IMPLEMENTED | Existing editorial design retained | The first-pass visual language was refined rather than replaced; no template/architecture restart. |
-| IMPLEMENTED | Shared light/dark system | Persisted system-aware themes across public sites and Admin. |
-| IMPLEMENTED | Keyboard/reduced-motion/focus foundation | Shared UI styles retain skip navigation, focus treatment and reduced-motion handling. |
-| IMPLEMENTED | Responsive ticket/CMS/public layouts | Second-pass operational screens include narrow-screen layout handling. |
-| PARTIAL | Formal WCAG 2.2 AA audit | Automated/browser checks cover critical interactions, but a final manual assistive-technology/accessibility audit remains a pre-launch QA item. |
+The following remain **BLOCKED** until the owner explicitly provisions/authorizes real infrastructure. The repository deliberately contains placeholders rather than invented values:
 
-## External configuration blocked before public launch
-
-The following are **BLOCKED** until the owner performs or authorizes the real account actions. The repository deliberately contains no fabricated values:
-
-- Cloudflare account/zone setup and account-specific authoritative nameservers.
-- GoDaddy nameserver change. This has **not** been performed.
-- Production D1 creation/database ID and production migrations.
-- Worker, Durable Object, R2 and site bindings to the real Cloudflare account.
-- `sparaton.com`, `aspheral.sparaton.com`, `ilmp.sparaton.com`, `admin.sparaton.com`, API hostname and `www` redirect binding/HTTPS verification.
-- Cloudflare Access application/AUD/team-domain and allowed staff identities.
-- Resend domain verification and exact SPF/DKIM/DMARC records supplied by Resend.
-- Production Resend API secret and ticket/session cryptographic secrets.
-- Cloudflare Analytics API account/zone/token configuration.
+- Cloudflare account/zone configuration and assigned authoritative nameservers.
+- Real production and staging D1 databases/IDs; explicit remote production migrations.
+- Durable Object bindings in the real account.
+- Private ticket `ATTACHMENTS` R2 bucket and public `CMS_MEDIA` R2 bucket for staging/production.
+- `sparaton.com`, `www.sparaton.com`, `aspheral.sparaton.com`, `ilmp.sparaton.com`, `admin.sparaton.com`, API and staging hostname bindings and independent HTTPS verification.
+- Cloudflare Access application/audience/team-domain plus allowed staff identities.
+- Resend domain verification, sender DNS records and production API secret.
+- Ticket/session cryptographic secrets.
+- Cloudflare Analytics account/zone/token configuration.
 - Optional authenticated GitHub token.
-- Privacy/Terms retention, jurisdiction and legal-entity review.
-- Final public staff titles/roster/contact information.
-- Final verification of volatile Kay/ILMP claims immediately before launch.
+- Owner/legal privacy, retention, jurisdiction and legal-entity confirmation.
+- Final public staff titles/roster/contact details and verification of volatile Kay/ILMP/release/benchmark claims.
+- GoDaddy nameserver change. It has **not** been performed and is intentionally outside this pass.
 
-The real domain must not be called live until the canonical HTTPS hostnames have actually been deployed and verified.
+The real domain must not be described as live until the canonical HTTPS hostnames have actually been deployed and independently verified.
 
-## Not implemented / deferred beyond this pass
+## Deferred / not implemented
 
-- **NOT IMPLEMENTED:** Paid simultaneous-ticket override/payment flow. The schema/architecture leaves room for it; no payment is activated.
-- **NOT IMPLEMENTED:** Full customer account system, billing history/invoices and saved briefs. These remain future account features by design.
-- **NOT IMPLEMENTED:** General-purpose visual CMS relationship graph editor and complete reusable media library.
+- **NOT IMPLEMENTED:** paid simultaneous-ticket override/payment flow.
+- **NOT IMPLEMENTED:** full customer account/billing/invoice/saved-brief system.
+- **PARTIAL:** organization/team enforcement for canned-response visibility, pending a staff team/organization identity model.
+- **PARTIAL:** uniform request-ID enrichment on every legacy audit mutation.
+- **PARTIAL:** complete CSP removal of `unsafe-inline` for existing inline styles/Admin bootstrap.
+- **PARTIAL:** automatic attachment/audit retention execution, intentionally awaiting owner/legal policy.
+- **PARTIAL:** human screen-reader and final staging visual QA.
+- **PARTIAL/BLOCKED:** live Lighthouse/field Core Web Vitals measurement until a real staging or production hostname exists.
 
-## Current validation gate
+## Validation gate
 
-GitHub Actions is the source of truth. Before this pass is declared CI-green, the final `main` commit must complete all current jobs successfully:
+The required final repository gate remains:
 
-1. Isolated D1 migrations
-2. Static and type checks
-3. Unit and integration tests
-4. Production builds
-5. Browser and E2E tests (Chromium, Firefox, WebKit, Mobile Chromium)
+1. `npm ci`
+2. `npm run check`
+3. `npm test`
+4. isolated D1 migrations
+5. `npm run build`
+6. `npm run test:e2e`
+7. Chromium, Firefox, WebKit and Mobile Chromium must all execute without skipped browser projects.
 
-Do not infer success from earlier runs or from code inspection alone.
+The code-bearing parent immediately before this ledger update had already achieved a fully green required GitHub Actions run (`31558180203`, #95). This ledger commit is documentation-only relative to that parent, but its own GitHub Actions run must also be green before the third pass is reported complete.
