@@ -14,7 +14,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
       - run: npm install --package-lock=false
       - run: npm run check
       - run: npm test
@@ -27,7 +26,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
       - run: npm install --package-lock=false
       - run: npx playwright install --with-deps chromium firefox webkit
       - run: npm run test:e2e
