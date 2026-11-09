@@ -1,14 +1,17 @@
 import { test, expect } from '@playwright/test';
 
-test('home explains Sparaton before projects', async ({ page }) => {
+test('home clearly announces construction and introduces the creators', async ({ page }) => {
   await page.goto('/');
-  await expect(page).toHaveTitle(/Sparaton Studios/);
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Work gets better');
-  await expect(page.getByRole('link', { name: /Start a conversation/ })).toBeVisible();
+  await expect(page).toHaveTitle(/Sparaton.*Under Construction/);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('UNDER');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('CONSTRUCTION');
+  await expect(page.getByRole('link', { name: /Meet the creators/ })).toHaveAttribute('href', '#creators');
+  await expect(page.getByRole('link', { name: /Contact the studio/ })).toHaveAttribute('href', 'mailto:support@sparaton.com');
+  await expect(page.locator('.creator-card')).toHaveCount(2);
 });
 
-test('theme can be changed and persists', async ({ page }) => {
-  await page.goto('/');
+test('theme can be changed on full-site pages and persists', async ({ page }) => {
+  await page.goto('/services');
   await page.getByRole('button', { name: 'Toggle color theme' }).click();
   const theme = await page.locator('html').getAttribute('data-theme');
   await page.reload();
