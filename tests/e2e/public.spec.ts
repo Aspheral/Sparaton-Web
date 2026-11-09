@@ -21,7 +21,7 @@ test('theme can be changed on full-site pages and persists', async ({ page }) =>
 test('creator cards use approved links and the share art is accessible', async ({ page, request }) => {
   await page.goto('/');
   await expect(page.locator('.creator-card')).toHaveCount(2);
-  await expect(page.getByRole('link', { name: 'GitHub for Aspheral' })).toHaveAttribute('href', 'https://github.com/Aspheral');
+  await expect(page.locator('.creator-card').first()).not.toContainText('GitHub');
   await expect(page.getByRole('link', { name: 'Email for Aspheral' })).toHaveAttribute('href', 'mailto:aspheral@sparaton.com');
   await expect(page.locator('.creator-card').last()).toContainText('Social links coming soon');
   await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /under-construction\.svg$/);
