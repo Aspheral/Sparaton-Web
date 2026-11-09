@@ -4,8 +4,8 @@
     "slug": "aspheral",
     "initials": "AS",
     "number": "01",
-    "role": "Author & creator",
-    "bio": "Writing characters, building worlds, and helping turn ambitious ideas into stories worth sharing.",
+    "role": "Founder · Writer",
+    "bio": "Building Sparaton's stories, characters, and creative direction, one idea at a time.",
     "avatar": null,
     "socials": [
       {
@@ -19,9 +19,14 @@
     "slug": "xcite",
     "initials": "XC",
     "number": "02",
-    "role": "Co-writer & creator",
-    "bio": "Co-creating original stories, characters, and worlds with the Sparaton team.",
+    "role": "Co-writer · Creator",
+    "bio": "Developing original stories, characters, and worlds alongside the Sparaton team.",
     "avatar": null,
-    "socials": []
+    "socials": [
+      {
+        "label": "Email",
+        "url": "mailto:pascshadow@sparaton.com"
+      }
+    ]
   }
 ]
