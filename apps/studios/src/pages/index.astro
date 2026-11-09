@@ -1,20 +1,196 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import { organizations, services } from '@sparaton/content';
+import brand from '@sparaton/ui/brand.svg?raw';
+
+// EDIT HERE: Replace/add names, biographies, and social URLs as the studio grows.
+// Only publish social links the person has approved.
+const creators = [
+  {
+    name: 'Aspheral',
+    initials: 'AS',
+    number: '01',
+    role: 'Author & creator',
+    bio: 'Writing characters, building worlds, and helping turn ambitious ideas into stories worth sharing.',
+    socials: [
+      { label: 'GitHub', url: 'https://github.com/Aspheral' },
+      { label: 'Email', url: 'mailto:aspheral@sparaton.com' }
+    ]
+  },
+  {
+    name: 'XCITE',
+    initials: 'XC',
+    number: '02',
+    role: 'Author & creator',
+    bio: 'Part of the creative team bringing Sparaton’s original stories and characters to life.',
+    socials: []
+  }
+];
+const year = new Date().getFullYear();
 ---
-<BaseLayout title="Sparaton Studios | Creative work built around the people who make it">
-  <section class="shell hero">
-    <div><p class="eyebrow">Sparaton Studios</p><h1>Work gets better when the right people are close to it.</h1></div>
-    <div><p class="lede">Sparaton brings creative specialists, technical builders, and unusual projects into one working ecosystem, without the layers of a traditional agency.</p><a class="button" href="/contact">Start a conversation →</a></div>
-  </section>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#f4f0e8" />
+    <meta name="description" content="Sparaton is an independent manga production studio. Our website is under construction, but you can meet our creators and get in touch." />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Sparaton | Under Construction" />
+    <meta property="og:description" content="Original manga. New worlds. The next chapter is on its way." />
+    <meta property="og:url" content="https://sparaton.com/" />
+    <meta property="og:site_name" content="Sparaton" />
+    <meta name="twitter:card" content="summary" />
+    <link rel="canonical" href="https://sparaton.com/" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>Sparaton | Under Construction</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="topbar wrap">
+      <a class="identity" href="/" aria-label="Sparaton home">
+        <span class="identity-mark" set:html={brand}></span>
+        <span class="identity-text"><strong>SPARATON</strong><small>INDEPENDENT MANGA STUDIO</small></span>
+      </a>
+      <nav aria-label="Main navigation" class="nav-links">
+        <a href="#about">Our story</a>
+        <a href="#creators">Creators</a>
+        <a href="#contact" class="nav-contact">Get in touch <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
 
-  <section class="section" id="work"><div class="shell"><div class="section-head"><p class="eyebrow">What we do</p><h2>Creative production without the agency fog.</h2></div><div class="grid-3">
-    {services.slice(0,6).map(([name, description]) => <article class="card"><h3>{name}</h3><p>{description}</p><a href="/services">Explore services →</a></article>)}
-  </div></div></section>
+    <main id="main">
+      <section class="hero wrap" aria-labelledby="main-title">
+        <div class="hero-copy">
+          <div class="hero-overline"><span class="indicator" aria-hidden="true"></span><span>SPARATON / ISSUE 000</span><span class="line"></span><span>COMING SOON</span></div>
+          <h1 id="main-title">UNDER<br /><span class="construction">CONSTRUCTION<span class="period">.</span></span></h1>
+          <p class="hero-statement">Good stories take time.<br /><em>Great worlds take imagination.</em></p>
+          <p class="hero-description">We're an independent manga production studio writing new stories, creating characters, and bringing worlds to life. Our full website is still taking shape, but the people behind it are already here.</p>
+          <div class="hero-actions">
+            <a class="button-primary" href="#creators">Meet the creators <span aria-hidden="true">↗</span></a>
+            <a class="button-text" href="mailto:support@sparaton.com">Contact the studio <span aria-hidden="true">↗</span></a>
+          </div>
+          <p class="tiny-note"><span class="tiny-square" aria-hidden="true"></span> PAGE 01 / THE BEGINNING</p>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="art-topline"><span>SPARATON ORIGINALS</span><span>VOL. 00</span></div>
+          <div class="art-sheet sheet-back"></div>
+          <div class="art-sheet sheet-mid"></div>
+          <div class="art-sheet sheet-front">
+            <div class="art-corner">S / 001</div>
+            <div class="art-motif">
+              <span class="motif-disc"></span>
+              <span class="motif-arch"></span>
+              <span class="motif-curve"></span>
+              <span class="motif-stripe stripe-one"></span>
+              <span class="motif-stripe stripe-two"></span>
+            </div>
+            <div class="art-bottom"><span>UNWRITTEN PAGES</span><span>∞</span></div>
+          </div>
+          <div class="art-caption">IDEAS IN MOTION <span>↘</span></div>
+        </div>
+      </section>
 
-  <section class="dark-band" id="people"><div class="shell"><div class="section-head"><p class="eyebrow">The ecosystem</p><h2>One organization. Distinct practices.</h2></div><div class="grid-3">
-    {organizations.map((org) => <article class="card" style="background:var(--night);color:var(--night-ink)"><div><span class="pill">{org.relationship}</span><h3 style="margin-top:1.4rem">{org.name}</h3></div><p class="muted">{org.summary}</p></article>)}
-  </div></div></section>
+      <div class="ticker" aria-hidden="true">
+        <div class="wrap ticker-inner"><span>ORIGINAL MANGA</span><i>✳</i><span>CHARACTERS & WORLDS</span><i>✳</i><span>STORIES IN PROGRESS</span><i>✳</i><span>ORIGINAL MANGA</span></div>
+      </div>
 
-  <section class="section"><div class="shell"><div class="section-head"><p class="eyebrow">How Sparaton works</p><h2>Direct collaboration, matched to the work.</h2></div><div class="grid-3"><article class="card"><h3>Find the right discipline</h3><p>Start with the work itself: story, art, technical production, or a project that crosses several fields.</p></article><article class="card"><h3>Work close to the creator</h3><p>Specialized talent without traditional agency overhead means fewer layers between the brief and the person doing the work.</p></article><article class="card"><h3>Keep the scope flexible</h3><p>Projects can begin as a focused commission and grow into a broader collaboration when that makes sense.</p></article></div></div></section>
-</BaseLayout>
+      <section class="about-section wrap" id="about" aria-labelledby="about-title">
+        <p class="section-kicker"><span>01</span> WHO WE ARE</p>
+        <div class="about-content">
+          <h2 id="about-title">Before the pages,<br /><em>there's a world.</em></h2>
+          <div class="about-aside">
+            <p>At Sparaton, we are authors first. We believe the smallest idea can grow into a universe, and that every memorable world begins with someone willing to imagine it.</p>
+            <p>We're still building the home for our work. This is your early look at the people making it happen.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="creators-section" id="creators" aria-labelledby="creators-title">
+        <div class="wrap">
+          <div class="section-heading">
+            <div><p class="section-kicker light-kicker"><span>02</span> THE PEOPLE</p><h2 id="creators-title">Meet the <em>creators.</em></h2></div>
+            <p>Every world starts with a person.<br />Here are some of ours.</p>
+          </div>
+          <div class="creator-grid">
+            {creators.map((person) => (
+              <article class="creator-card">
+                <div class="card-top"><span>SP / CREATOR {person.number}</span><span class="card-top-symbol" aria-hidden="true">↗</span></div>
+                <div class="avatar" aria-hidden="true"><span>{person.initials}</span><i></i></div>
+                <div class="creator-details"><p class="creator-role">{person.role}</p><h3>{person.name}</h3><p class="creator-bio">{person.bio}</p></div>
+                <div class="social-list" aria-label={person.name + ' links'}>
+                  {person.socials.length ? person.socials.map((social) => (
+                    <a href={social.url} rel="noopener noreferrer" target={social.url.startsWith('https://') ? '_blank' : undefined}>
+                      {social.label} <span aria-hidden="true">↗</span>
+                    </a>
+                  )) : <span class="pending-links">Social links coming soon</span>}
+                </div>
+              </article>
+            ))}
+          </div>
+          <p class="creator-footnote">MORE NAMES, MORE STORIES, MORE TO COME. <span>✳</span></p>
+        </div>
+      </section>
+
+      <section class="contact-section wrap" id="contact" aria-labelledby="contact-title">
+        <p class="section-kicker"><span>03</span> SAY HELLO</p>
+        <div class="contact-grid">
+          <h2 id="contact-title">Have something<br /><em>on your mind?</em></h2>
+          <div class="contact-side">
+            <p>Questions, collaborations, or just a friendly hello? Our inbox is open while we put the finishing touches on our corner of the internet.</p>
+            <a class="contact-email" href="mailto:support@sparaton.com">support@sparaton.com <span aria-hidden="true">↗</span></a>
+            <small>FOR GENERAL INQUIRIES & SUPPORT</small>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer-inner">
+        <a class="footer-logo" href="/" aria-label="Back to Sparaton home">SPARATON<span>✳</span></a>
+        <p>Independent manga production.<br />Bringing worlds to life.</p>
+        <div class="footer-end"><span>© {year} SPARATON</span><a href="mailto:support@sparaton.com">CONTACT ↗</a></div>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style is:global>
+  :root{--paper:#f4f0e8;--ink:#1c1d1a;--muted:#666761;--border:#cfcbbf;--accent:#d3533e;--dark:#171a18;--darkline:#3c403c;--serif:Georgia,'Times New Roman',serif;--sans:Arial,Helvetica,sans-serif}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+  a{color:inherit}a:focus-visible{outline:3px solid var(--accent);outline-offset:4px}::selection{background:#e9b2a6;color:#1c1d1a}
+  .skip-link{position:absolute;left:16px;top:-100px;background:#fff;padding:10px;z-index:30}.skip-link:focus{top:12px}
+  .wrap{width:min(100% - 92px,1320px);margin-inline:auto}
+  .topbar{min-height:105px;display:flex;align-items:center;justify-content:space-between;gap:22px;border-bottom:1px solid var(--border)}
+  .identity{display:flex;align-items:center;gap:13px;text-decoration:none}.identity-mark{display:block;width:41px;height:41px;color:var(--ink)}.identity-mark svg{display:block;width:100%;height:100%}
+  .identity-text{display:flex;flex-direction:column;gap:3px}.identity-text strong{font-size:20px;letter-spacing:-.07em;line-height:1}.identity-text small{font-size:9px;font-weight:700;letter-spacing:.18em;color:var(--muted)}
+  .nav-links{display:flex;align-items:center;gap:42px}.nav-links a{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;text-decoration:none;transition:color .2s}.nav-links a:hover{color:var(--accent)}
+  .nav-links .nav-contact{border:1px solid var(--ink);padding:14px 17px;display:flex;gap:25px;align-items:center}.nav-contact span{font-size:17px}
+  .hero{min-height:690px;display:grid;grid-template-columns:minmax(0,1.14fr) minmax(340px,.86fr);gap:clamp(30px,5vw,85px);align-items:center;padding-top:64px;padding-bottom:76px}
+  .hero-copy{position:relative;z-index:1}.hero-overline{display:flex;gap:15px;align-items:center;font-size:10px;letter-spacing:.15em;font-weight:800;white-space:nowrap}.indicator{height:7px;width:7px;background:var(--accent);border-radius:50%}.hero-overline .line{height:1px;background:var(--border);width:43px}
+  h1,h2,h3,p{margin-top:0}.hero h1{margin:33px 0 26px;font-weight:900;letter-spacing:-.105em;font-size:clamp(58px,7.5vw,118px);line-height:.95}.construction{font-size:.78em;letter-spacing:-.086em}.period{color:var(--accent)}
+  .hero-statement{font-size:clamp(25px,2.5vw,39px);line-height:1.19;font-weight:700;letter-spacing:-.052em;margin-bottom:19px}.hero-statement em,.about-section h2 em,.section-heading h2 em,.contact-section h2 em{font-family:var(--serif);font-weight:400;letter-spacing:-.035em}
+  .hero-description{max-width:540px;color:var(--muted);font-size:16px;line-height:1.75;margin-bottom:30px}.hero-actions{display:flex;gap:25px;align-items:center;flex-wrap:wrap}
+  .button-primary{background:var(--ink);color:var(--paper);padding:17px 20px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:750;display:inline-flex;gap:34px;justify-content:space-between;text-decoration:none;transition:background .2s,transform .2s}.button-primary:hover{background:var(--accent);transform:translateY(-2px)}
+  .button-text{font-size:12px;text-decoration:none;font-weight:750;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid;padding:10px 0;display:inline-flex;gap:13px}.button-text:hover{color:var(--accent)}
+  .tiny-note{margin:56px 0 0;color:#808179;font-size:10px;letter-spacing:.15em;font-weight:800;display:flex;align-items:center;gap:10px}.tiny-square{width:7px;height:7px;border:1px solid currentColor}
+  .hero-art{position:relative;height:570px;max-width:520px;width:100%;margin-inline:auto}.art-topline{position:absolute;left:1%;right:1%;top:0;display:flex;justify-content:space-between;font-size:10px;font-weight:800;letter-spacing:.15em}
+  .art-sheet{position:absolute;width:68%;height:73%;left:17%;top:11%;border:1px solid var(--ink);background:var(--paper)}.sheet-back{background:#d5d7cf;transform:rotate(12deg) translate(18px,-2px)}.sheet-mid{background:#eee6d7;transform:rotate(-7deg) translate(-14px,14px)}
+  .sheet-front{overflow:hidden;background:#f8f5ee;box-shadow:14px 18px 0 rgba(25,27,25,.09)}.sheet-front:after{content:'';position:absolute;inset:13px;border:1px solid #a5a79d;pointer-events:none}.art-corner{position:absolute;z-index:3;left:30px;top:28px;font-size:11px;font-weight:800;letter-spacing:.13em}
+  .art-motif{position:absolute;inset:52px 15px 40px;overflow:hidden}.motif-disc{position:absolute;left:12%;top:16%;width:75%;aspect-ratio:1;border-radius:50%;background:var(--accent)}.motif-arch{position:absolute;left:21%;top:18%;width:66%;height:83%;border-radius:47% 50% 0 0;border:52px solid var(--ink);transform:rotate(27deg)}.motif-curve{position:absolute;left:-34%;bottom:-49%;height:110%;width:100%;border:28px solid var(--paper);border-radius:50%;transform:rotate(-33deg)}.motif-stripe{position:absolute;display:block;width:120%;height:18px;background:#f8f5ee;transform:rotate(-35deg)}.stripe-one{left:-3%;top:60%}.stripe-two{left:-2%;top:70%;height:10px}
+  .art-bottom{position:absolute;left:31px;right:31px;bottom:28px;display:flex;justify-content:space-between;font-size:10px;font-weight:800;letter-spacing:.12em;z-index:3}.art-bottom span:last-child{font-size:18px}.art-caption{position:absolute;bottom:9px;right:0;font-size:11px;font-weight:800;letter-spacing:.18em}.art-caption span{font-size:22px;padding-left:12px}
+  .ticker{border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);background:var(--accent);overflow:hidden}.ticker-inner{height:56px;display:flex;gap:40px;align-items:center;justify-content:space-between;white-space:nowrap;font-size:11px;letter-spacing:.15em;font-weight:900;color:#fff}.ticker-inner i{font-size:17px;font-style:normal;color:#381d1a}
+  .about-section{padding-top:128px;padding-bottom:137px}.section-kicker{font-size:11px;letter-spacing:.15em;font-weight:800;display:flex;gap:18px;align-items:center;color:var(--muted);margin-bottom:43px}.section-kicker span{color:var(--accent)}
+  .about-content{display:grid;grid-template-columns:1.12fr .88fr;gap:clamp(60px,10vw,170px);align-items:end}.about-section h2,.section-heading h2,.contact-section h2{font-size:clamp(43px,5vw,78px);letter-spacing:-.076em;line-height:1.04;margin:0;font-weight:800}.about-aside{padding-bottom:6px}.about-aside p{font-size:17px;line-height:1.8;color:var(--muted);margin-bottom:18px}.about-aside p:first-child{color:var(--ink)}
+  .creators-section{background:var(--dark);color:#f4f0e8;padding:117px 0 104px}.section-heading{display:flex;align-items:end;justify-content:space-between;gap:28px;margin-bottom:43px}.section-heading .section-kicker{margin-bottom:38px}.light-kicker{color:#aaa9a0}.section-heading h2{font-size:clamp(49px,6vw,83px)}.section-heading>p{color:#a9aaa2;line-height:1.65;font-size:15px;margin:0 0 5px}
+  .creator-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.creator-card{min-width:0;background:#222623;border:1px solid #454943;min-height:480px;padding:30px 35px;display:flex;flex-direction:column;transition:transform .25s,border-color .25s}.creator-card:hover{transform:translateY(-5px);border-color:#b1b4aa}
+  .card-top{display:flex;justify-content:space-between;align-items:start;color:#a6a99e;font-size:11px;font-weight:800;letter-spacing:.16em}.card-top-symbol{font-size:23px;color:#d6d8cc;font-weight:400}.avatar{width:103px;height:103px;border-radius:50%;background:#e9e6dc;color:var(--ink);display:grid;place-items:center;margin:46px 0 32px;position:relative;overflow:hidden}.avatar span{font-size:33px;font-weight:900;letter-spacing:-.09em;z-index:2}.avatar i{position:absolute;bottom:-29px;left:-15px;width:125px;height:68px;background:var(--accent);transform:rotate(-24deg)}
+  .creator-role{text-transform:uppercase;letter-spacing:.12em;font-size:10px;font-weight:800;color:#b8baaf;margin:0 0 7px}.creator-details h3{font-size:35px;letter-spacing:-.056em;margin:0 0 13px}.creator-bio{max-width:400px;color:#b5b8af;font-size:14px;line-height:1.75;margin-bottom:24px}.social-list{border-top:1px solid #484d47;margin-top:auto;padding-top:22px;display:flex;gap:12px;flex-wrap:wrap}.social-list a{border:1px solid #696f66;color:#f4f0e8;text-decoration:none;padding:10px 14px;font-size:11px;letter-spacing:.06em;display:inline-flex;gap:20px;align-items:center;transition:background .2s}.social-list a:hover{background:#f4f0e8;color:var(--ink)}.pending-links{font-size:12px;color:#858b82;letter-spacing:.04em}
+  .creator-footnote{font-size:11px;letter-spacing:.15em;font-weight:800;color:#a0a59d;margin:43px 0 0;display:flex;justify-content:space-between}.creator-footnote span{color:var(--accent);font-size:18px}
+  .contact-section{padding-top:124px;padding-bottom:150px}.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:end}.contact-side{padding-left:10%;}.contact-side p{color:var(--muted);font-size:16px;line-height:1.8;max-width:460px}.contact-email{font-size:clamp(18px,2.4vw,33px);display:inline-flex;align-items:center;gap:20px;text-decoration:none;font-weight:750;letter-spacing:-.045em;border-bottom:2px solid var(--ink);padding:9px 0 16px;margin:8px 0 18px;overflow-wrap:anywhere}.contact-email:hover{color:var(--accent);border-color:var(--accent)}.contact-side small{display:block;font-size:10px;font-weight:800;color:#777b73;letter-spacing:.15em}
+  .footer{background:var(--dark);color:#f4f0e8}.footer-inner{padding:55px 0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:25px;align-items:center}.footer-logo{font-size:24px;letter-spacing:-.08em;font-weight:900;text-decoration:none}.footer-logo span{color:var(--accent);padding-left:5px}.footer-inner p{font-size:13px;line-height:1.6;color:#a2a79f;margin:0}.footer-end{display:flex;justify-content:flex-end;gap:32px;align-items:center;font-size:11px;letter-spacing:.07em}.footer-end a{text-decoration:none}.footer-end a:hover{color:var(--accent)}
+  @media(max-width:1060px){.wrap{width:min(100% - 60px,1320px)}.hero{grid-template-columns:minmax(0,1fr) minmax(270px,.75fr);gap:20px}.hero h1{font-size:clamp(55px,7.3vw,90px)}.hero-art{height:500px}.hero-description{font-size:15px}.nav-links{gap:23px}}
+  @media(max-width:760px){.wrap{width:min(100% - 36px,1320px)}.topbar{min-height:82px}.identity-mark{width:34px;height:34px}.identity-text strong{font-size:18px}.identity-text small{font-size:8px}.nav-links>a:not(.nav-contact){display:none}.nav-links .nav-contact{font-size:10px;padding:11px;gap:12px}.hero{grid-template-columns:1fr;gap:44px;min-height:unset;padding-top:65px;padding-bottom:78px}.hero h1{font-size:clamp(53px,11vw,86px);max-width:100%}.construction{font-size:.78em}.hero-description{max-width:620px}.tiny-note{margin-top:38px}.hero-art{max-width:450px;height:450px}.ticker-inner{gap:30px;justify-content:flex-start}.ticker-inner span:last-child{display:none}.about-section{padding:85px 0}.about-content,.contact-grid{grid-template-columns:1fr;gap:28px}.about-section h2,.contact-section h2{font-size:clamp(42px,9vw,65px)}.creators-section{padding:85px 0}.section-heading{align-items:start;flex-direction:column;gap:24px}.section-heading .section-kicker{margin-bottom:24px}.creator-grid{grid-template-columns:1fr}.creator-card{min-height:430px}.contact-section{padding:85px 0}.contact-side{padding-left:0}.footer-inner{grid-template-columns:1fr 1fr}.footer-end{grid-column:1/-1;justify-content:space-between}}
+  @media(max-width:410px){.hero h1{font-size:clamp(43px,10.8vw,54px)}.hero-overline{gap:8px;font-size:9px}.hero-overline .line{width:14px}.hero-statement{font-size:27px}.hero-art{height:355px}.art-motif{inset:45px 10px 30px}.motif-arch{border-width:35px}.creator-card{padding:25px}.contact-email{font-size:20px}.footer-inner{grid-template-columns:1fr}.footer-end{grid-column:1}}
+  @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important}}
+</style>
