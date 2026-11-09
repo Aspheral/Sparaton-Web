@@ -18,6 +18,18 @@ test('theme can be changed on full-site pages and persists', async ({ page }) =>
   await expect(page.locator('html')).toHaveAttribute('data-theme', theme!);
 });
 
+test('creator cards use approved links and the share art is accessible', async ({ page, request }) => {
+  await page.goto('/');
+  await expect(page.locator('.creator-card')).toHaveCount(2);
+  await expect(page.getByRole('link', { name: 'GitHub for Aspheral' })).toHaveAttribute('href', 'https://github.com/Aspheral');
+  await expect(page.getByRole('link', { name: 'Email for Aspheral' })).toHaveAttribute('href', 'mailto:aspheral@sparaton.com');
+  await expect(page.locator('.creator-card').last()).toContainText('Social links coming soon');
+  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /under-construction\.svg$/);
+  const art = await request.get('/og/under-construction.svg');
+  expect(art.ok()).toBe(true);
+  expect(art.headers()['content-type']).toMatch(/image\/svg\+xml/);
+});
+
 test('service passes context into inquiry', async ({ page }) => {
   await page.goto('/services');
   const cta = page.getByRole('link', { name: /Request a quote/ }).first();
