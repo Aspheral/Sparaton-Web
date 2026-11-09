@@ -1,29 +1,8 @@
 ---
 import brand from '@sparaton/ui/brand.svg?raw';
 
-// EDIT HERE: Replace/add names, biographies, and social URLs as the studio grows.
-// Only publish social links the person has approved.
-const creators = [
-  {
-    name: 'Aspheral',
-    initials: 'AS',
-    number: '01',
-    role: 'Author & creator',
-    bio: 'Writing characters, building worlds, and helping turn ambitious ideas into stories worth sharing.',
-    socials: [
-      { label: 'GitHub', url: 'https://github.com/Aspheral' },
-      { label: 'Email', url: 'mailto:aspheral@sparaton.com' }
-    ]
-  },
-  {
-    name: 'XCITE',
-    initials: 'XC',
-    number: '02',
-    role: 'Author & creator',
-    bio: 'Part of the creative team bringing Sparaton’s original stories and characters to life.',
-    socials: []
-  }
-];
+// Editable profiles and confirmed social links live in src/data/creators.json.
+import creators from '../data/creators.json';
 const year = new Date().getFullYear();
 ---
 <!doctype html>
@@ -38,7 +17,10 @@ const year = new Date().getFullYear();
     <meta property="og:description" content="Original manga. New worlds. The next chapter is on its way." />
     <meta property="og:url" content="https://sparaton.com/" />
     <meta property="og:site_name" content="Sparaton" />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content="https://sparaton.com/og/under-construction.svg" />
+    <meta property="og:image:alt" content="Sparaton, an independent manga studio. Under Construction." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://sparaton.com/og/under-construction.svg" />
     <link rel="canonical" href="https://sparaton.com/" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>Sparaton | Under Construction</title>
@@ -114,11 +96,13 @@ const year = new Date().getFullYear();
             {creators.map((person) => (
               <article class="creator-card">
                 <div class="card-top"><span>SP / CREATOR {person.number}</span><span class="card-top-symbol" aria-hidden="true">↗</span></div>
-                <div class="avatar" aria-hidden="true"><span>{person.initials}</span><i></i></div>
+                <div class="avatar" aria-hidden={person.avatar ? undefined : 'true'}>
+                  {person.avatar ? <img src={person.avatar} alt={person.name + ' profile picture'} loading="lazy" decoding="async" width="103" height="103" /> : <><span>{person.initials}</span><i></i></>}
+                </div>
                 <div class="creator-details"><p class="creator-role">{person.role}</p><h3>{person.name}</h3><p class="creator-bio">{person.bio}</p></div>
                 <div class="social-list" aria-label={person.name + ' links'}>
                   {person.socials.length ? person.socials.map((social) => (
-                    <a href={social.url} rel="noopener noreferrer" target={social.url.startsWith('https://') ? '_blank' : undefined}>
+                    <a href={social.url} rel={social.url.startsWith('https://') ? 'noopener noreferrer' : undefined} target={social.url.startsWith('https://') ? '_blank' : undefined} aria-label={social.label + ' for ' + person.name}>
                       {social.label} <span aria-hidden="true">↗</span>
                     </a>
                   )) : <span class="pending-links">Social links coming soon</span>}
@@ -184,7 +168,7 @@ const year = new Date().getFullYear();
   .about-content{display:grid;grid-template-columns:1.12fr .88fr;gap:clamp(60px,10vw,170px);align-items:end}.about-section h2,.section-heading h2,.contact-section h2{font-size:clamp(43px,5vw,78px);letter-spacing:-.076em;line-height:1.04;margin:0;font-weight:800}.about-aside{padding-bottom:6px}.about-aside p{font-size:17px;line-height:1.8;color:var(--muted);margin-bottom:18px}.about-aside p:first-child{color:var(--ink)}
   .creators-section{background:var(--dark);color:#f4f0e8;padding:117px 0 104px}.section-heading{display:flex;align-items:end;justify-content:space-between;gap:28px;margin-bottom:43px}.section-heading .section-kicker{margin-bottom:38px}.light-kicker{color:#aaa9a0}.section-heading h2{font-size:clamp(49px,6vw,83px)}.section-heading>p{color:#a9aaa2;line-height:1.65;font-size:15px;margin:0 0 5px}
   .creator-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.creator-card{min-width:0;background:#222623;border:1px solid #454943;min-height:480px;padding:30px 35px;display:flex;flex-direction:column;transition:transform .25s,border-color .25s}.creator-card:hover{transform:translateY(-5px);border-color:#b1b4aa}
-  .card-top{display:flex;justify-content:space-between;align-items:start;color:#a6a99e;font-size:11px;font-weight:800;letter-spacing:.16em}.card-top-symbol{font-size:23px;color:#d6d8cc;font-weight:400}.avatar{width:103px;height:103px;border-radius:50%;background:#e9e6dc;color:var(--ink);display:grid;place-items:center;margin:46px 0 32px;position:relative;overflow:hidden}.avatar span{font-size:33px;font-weight:900;letter-spacing:-.09em;z-index:2}.avatar i{position:absolute;bottom:-29px;left:-15px;width:125px;height:68px;background:var(--accent);transform:rotate(-24deg)}
+  .card-top{display:flex;justify-content:space-between;align-items:start;color:#a6a99e;font-size:11px;font-weight:800;letter-spacing:.16em}.card-top-symbol{font-size:23px;color:#d6d8cc;font-weight:400}.avatar{width:103px;height:103px;border-radius:50%;background:#e9e6dc;color:var(--ink);display:grid;place-items:center;margin:46px 0 32px;position:relative;overflow:hidden}.avatar span{font-size:33px;font-weight:900;letter-spacing:-.09em;z-index:2}.avatar img{width:100%;height:100%;object-fit:cover;position:relative;z-index:3}.avatar i{position:absolute;bottom:-29px;left:-15px;width:125px;height:68px;background:var(--accent);transform:rotate(-24deg)}
   .creator-role{text-transform:uppercase;letter-spacing:.12em;font-size:10px;font-weight:800;color:#b8baaf;margin:0 0 7px}.creator-details h3{font-size:35px;letter-spacing:-.056em;margin:0 0 13px}.creator-bio{max-width:400px;color:#b5b8af;font-size:14px;line-height:1.75;margin-bottom:24px}.social-list{border-top:1px solid #484d47;margin-top:auto;padding-top:22px;display:flex;gap:12px;flex-wrap:wrap}.social-list a{border:1px solid #696f66;color:#f4f0e8;text-decoration:none;padding:10px 14px;font-size:11px;letter-spacing:.06em;display:inline-flex;gap:20px;align-items:center;transition:background .2s}.social-list a:hover{background:#f4f0e8;color:var(--ink)}.pending-links{font-size:12px;color:#858b82;letter-spacing:.04em}
   .creator-footnote{font-size:11px;letter-spacing:.15em;font-weight:800;color:#a0a59d;margin:43px 0 0;display:flex;justify-content:space-between}.creator-footnote span{color:var(--accent);font-size:18px}
   .contact-section{padding-top:124px;padding-bottom:150px}.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:end}.contact-side{padding-left:10%;}.contact-side p{color:var(--muted);font-size:16px;line-height:1.8;max-width:460px}.contact-email{font-size:clamp(18px,2.4vw,33px);display:inline-flex;align-items:center;gap:20px;text-decoration:none;font-weight:750;letter-spacing:-.045em;border-bottom:2px solid var(--ink);padding:9px 0 16px;margin:8px 0 18px;overflow-wrap:anywhere}.contact-email:hover{color:var(--accent);border-color:var(--accent)}.contact-side small{display:block;font-size:10px;font-weight:800;color:#777b73;letter-spacing:.15em}
