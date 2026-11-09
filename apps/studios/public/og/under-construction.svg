@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+<title id="title">Sparaton — Under Construction</title>
+<desc id="desc">Editorial card for the original manga production studio. Warm paper, bold black typography, and an abstract manga page.</desc>
+<rect width="1200" height="630" fill="#f4f0e8"/>
+<rect x="42" y="42" width="1116" height="546" fill="none" stroke="#c8c5b9" stroke-width="2"/>
+<path d="M42 123H1158" stroke="#c8c5b9" stroke-width="2"/>
+<text x="78" y="95" font-family="Arial,Helvetica,sans-serif" font-size="29" font-weight="900" letter-spacing="-1.5" fill="#1c1d1a">SPARATON</text>
+<text x="1130" y="92" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="15" font-weight="700" letter-spacing="3" fill="#555951">ORIGINAL MANGA / VOL. 00</text>
+<g transform="translate(785 162)">
+<rect x="74" y="48" width="295" height="342" fill="#d3533e" transform="rotate(11 221 219)"/>
+<rect x="4" y="42" width="296" height="340" fill="#ece7da" stroke="#1c1d1a" stroke-width="3" transform="rotate(-7 152 212)"/>
+<rect x="34" y="30" width="296" height="340" fill="#fbfaf5" stroke="#1c1d1a" stroke-width="3"/>
+<rect x="60" y="60" width="244" height="278" fill="none" stroke="#1c1d1a" stroke-width="2"/>
+<circle cx="175" cy="187" r="96" fill="#d3533e"/>
+<path d="M100 300c40-104 95-100 148-180M105 337c38-125 116-126 166-187" fill="none" stroke="#1c1d1a" stroke-width="38" stroke-linecap="square"/>
+<path d="M78 294 273 90" stroke="#fbfaf5" stroke-width="10"/>
+</g>
+<text x="77" y="190" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="800" letter-spacing="5" fill="#d3533e">WE'RE BUILDING SOMETHING.</text>
+<text x="72" y="295" font-family="Arial,Helvetica,sans-serif" font-size="78" font-weight="900" letter-spacing="-6" fill="#1c1d1a">UNDER</text>
+<text x="70" y="373" font-family="Arial,Helvetica,sans-serif" font-size="67" font-weight="900" letter-spacing="-5" fill="#1c1d1a">CONSTRUCTION<tspan fill="#d3533e">.</tspan></text>
+<path d="M77 413H669" stroke="#c8c5b9" stroke-width="2"/>
+<text x="78" y="461" font-family="Georgia,Times New Roman,serif" font-style="italic" font-size="32" fill="#1c1d1a">Bringing worlds to life.</text>
+<text x="78" y="553" font-family="Arial,Helvetica,sans-serif" font-size="15" font-weight="700" letter-spacing="2" fill="#686a62">SPARATON.COM</text>
+<text x="1128" y="553" font-family="Arial,Helvetica,sans-serif" font-size="15" font-weight="700" letter-spacing="2" text-anchor="end" fill="#686a62">CHAPTER 000</text>
+</svg>
