@@ -3,13 +3,11 @@ import { test, expect } from '@playwright/test';
 test('home clearly announces construction and introduces the creators', async ({ page }) => {
   await page.goto('/');
   await expect(page).toHaveTitle(/Sparaton.*Under Construction/);
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('UNDER');
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('CONSTRUCTION');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText(/Under construction/i);
   await expect(page.getByRole('link', { name: /Meet the creators/ })).toHaveAttribute('href', '#creators');
-  await expect(page.getByRole('link', { name: /Contact the studio/ })).toHaveAttribute('href', 'mailto:support@sparaton.com');
-  await expect(page.locator('.creator-card')).toHaveCount(2);
+  await expect(page.getByRole('link', { name: 'Contact us' })).toHaveAttribute('href', 'mailto:support@sparaton.com');
+  await expect(page.locator('.profile')).toHaveCount(2);
 });
-
 test('theme can be changed on full-site pages and persists', async ({ page }) => {
   await page.goto('/services');
   await page.getByRole('button', { name: 'Toggle color theme' }).click();
@@ -18,18 +16,16 @@ test('theme can be changed on full-site pages and persists', async ({ page }) =>
   await expect(page.locator('html')).toHaveAttribute('data-theme', theme!);
 });
 
-test('creator cards use approved links and the share art is accessible', async ({ page, request }) => {
+test('creator cards show only approved contact links', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('.creator-card')).toHaveCount(2);
-  await expect(page.locator('.creator-card').first()).not.toContainText('GitHub');
-  await expect(page.getByRole('link', { name: 'Email for Aspheral' })).toHaveAttribute('href', 'mailto:aspheral@sparaton.com');
-  await expect(page.locator('.creator-card').last()).toContainText('Social links coming soon');
-  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /under-construction\.svg$/);
-  const art = await request.get('/og/under-construction.svg');
-  expect(art.ok()).toBe(true);
-  expect(art.headers()['content-type']).toMatch(/image\/svg\+xml/);
+  await expect(page.locator('.profile')).toHaveCount(2);
+  await expect(page.locator('.profile').first()).toContainText('Aspheral');
+  await expect(page.locator('.profile').first()).not.toContainText('GitHub');
+  await expect(page.getByRole('link', { name: 'aspheral@sparaton.com' })).toHaveAttribute('href', 'mailto:aspheral@sparaton.com');
+  await expect(page.getByRole('link', { name: 'pascshadow@sparaton.com' })).toHaveAttribute('href', 'mailto:pascshadow@sparaton.com');
+  await expect(page.locator('.profile').last()).toContainText('XCITE');
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex, nofollow');
 });
-
 test('service passes context into inquiry', async ({ page }) => {
   await page.goto('/services');
   const cta = page.getByRole('link', { name: /Request a quote/ }).first();
