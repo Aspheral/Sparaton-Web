@@ -8,8 +8,10 @@
     "bio": "Writing characters, building worlds, and helping turn ambitious ideas into stories worth sharing.",
     "avatar": null,
     "socials": [
-      { "label": "GitHub", "url": "https://github.com/Aspheral" },
-      { "label": "Email", "url": "mailto:aspheral@sparaton.com" }
+      {
+        "label": "Email",
+        "url": "mailto:aspheral@sparaton.com"
+      }
     ]
   },
   {
