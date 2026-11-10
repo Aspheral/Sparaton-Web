@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Aspheral",
+    "slug": "aspheral",
+    "initials": "AS",
+    "number": "01",
+    "role": "Founder · Writer",
+    "bio": "Building Sparaton's stories, characters, and creative direction, one idea at a time.",
+    "avatar": null,
+    "socials": [
+      {
+        "label": "Email",
+        "url": "mailto:aspheral@sparaton.com"
+      }
+    ]
+  },
+  {
+    "name": "XCITE",
+    "slug": "xcite",
+    "initials": "XC",
+    "number": "02",
+    "role": "Co-writer · Creator",
+    "bio": "Developing original stories, characters, and worlds alongside the Sparaton team.",
+    "avatar": null,
+    "socials": [
+      {
+        "label": "Email",
+        "url": "mailto:pascshadow@sparaton.com"
+      }
+    ]
+  }
+]
