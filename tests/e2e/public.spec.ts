@@ -24,7 +24,7 @@ test('creator cards show only approved contact links', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'aspheral@sparaton.com' })).toHaveAttribute('href', 'mailto:aspheral@sparaton.com');
   await expect(page.getByRole('link', { name: 'pascshadow@sparaton.com' })).toHaveAttribute('href', 'mailto:pascshadow@sparaton.com');
   await expect(page.locator('.profile').last()).toContainText('XCITE');
-  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex, nofollow');
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex,follow');
 });
 test('search appearance metadata and brand assets are valid', async ({ page, request }) => {
   await page.goto('/');
